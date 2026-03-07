@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CNC Project Stats</title>
+    <link rel="icon" href="favicon.ico" />
+    <link rel="stylesheet" href="dark-mode.css" />
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        line-height: 1.6; background: #f5f5f5; min-height: 100vh; color: #1a1a1a; padding: 20px 20px;
+      }
+      .container { max-width: 1200px; width: 100%; margin: 0 auto; }
+      .back-button {
+        position: fixed; top: 20px; left: 20px;
+        background: white; color: #2E7D32; text-decoration: none;
+        font-size: 0.9rem; font-weight: 700; padding: 10px 16px;
+        border-radius: 30px; border: 2px solid #2E7D32;
+        z-index: 1000; display: inline-flex; align-items: center; gap: 6px;
+        transition: all 0.2s;
+      }
+      .back-button:hover { background: #e8f5e9; }
+
+      header { text-align: center; margin-bottom: 16px; padding-top: 10px; }
+      header .header-logo { height: 60px; margin-bottom: 4px; }
+      header .header-logo.dark { display: none; }
+      body.dark-mode header .header-logo.light { display: none; }
+      body.dark-mode header .header-logo.dark { display: inline; }
+      header h1 { font-size: 2.2rem; color: #1a1a1a; margin-bottom: 8px; font-weight: 900; }
+      header p { color: #555; font-size: 1rem; }
+
+      /* Project header */
+      .project-header { text-align: center; margin-bottom: 0; padding-top: 0; }
+      .project-header-content {
+        display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 10px;
+      }
+      .project-icon { width: 64px; height: 64px; border-radius: 12px; object-fit: cover; }
+      .project-header h1 { font-size: 1.6rem; color: #1a1a1a; font-weight: 900; }
+      .project-header a { color: #2E7D32; text-decoration: none; font-weight: 700; }
+      .project-header a:hover { text-decoration: underline; }
+
+      /* Project selector */
+      .project-selector {
+        background: white; border-radius: 12px; padding: 24px;
+        border: 2px solid #1a1a1a;
+        margin-bottom: 30px; text-align: center;
+      }
+      .project-selector h2 { font-size: 1.1rem; color: #1a1a1a; margin-bottom: 16px; font-weight: 700; }
+      .project-list {
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px;
+      }
+      .project-link {
+        display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+        background: #f5f5f5; border-radius: 8px; text-decoration: none; color: inherit;
+        border: 1px solid #e0e0e0; transition: all 0.2s;
+      }
+      .project-link:hover { background: #e8f5e9; }
+      .project-link img { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; }
+      .project-link .pl-info { flex: 1; text-align: left; min-width: 0; }
+      .project-link .pl-title { font-size: 0.9rem; font-weight: 700; color: #1a1a1a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .project-link .pl-count { font-size: 0.8rem; color: #888; }
+
+      /* Stats */
+      .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 30px; }
+      .stat-card {
+        background: white; border-radius: 14px; padding: 18px 20px;
+        text-align: center; border: 1px solid #e0e0e0;
+      }
+      .stat-card .stat-value { font-size: 2rem; font-weight: 900; color: #2E7D32; }
+      .stat-card .stat-label { font-size: 0.8rem; color: #888; text-transform: none; letter-spacing: 0; font-weight: 500; }
+
+
+      /* Observation Map */
+      .map-container {
+        display: grid; gap: 0; border-radius: 12px; background: #e8e8e8;
+        position: relative; overflow: hidden; aspect-ratio: 1 / 1; width: 100%;
+        margin: 0 auto;
+        border: 1px solid #e0e0e0;
+      }
+      .map-container img {
+        position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill;
+      }
+      .map-subtitle {
+        text-align: center; color: #555; font-size: 1.1rem; margin-bottom: 12px;
+      }
+      .map-subtitle .coverage-pct { color: #2E7D32; font-weight: 900; }
+      body.dark-mode .map-container { border-color: #444; background: #1a1a1a; }
+      body.dark-mode .map-subtitle { color: #999; }
+
+      /* Section titles */
+      .section-title {
+        font-size: 1.5rem; color: #1a1a1a; margin: 40px 0 16px; padding: 0;
+        font-weight: 900;
+      }
+
+
+      /* Leaderboards */
+      .leaderboards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 30px; }
+      .leaderboard-card {
+        background: white; border-radius: 12px; padding: 20px;
+        border: 1px solid #e0e0e0;
+        display: flex; flex-direction: column; gap: 6px;
+      }
+      .leaderboard-card h3 { font-size: 1rem; color: #1a1a1a; font-weight: 700; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 2px solid #e0e0e0; display: flex; align-items: center; gap: 8px; }
+      .leaderboard-item {
+        display: flex; align-items: center; gap: 10px; padding: 8px 6px;
+        border-radius: 8px; text-decoration: none; color: inherit; transition: background 0.2s;
+      }
+      .leaderboard-item:hover { background: #f5f5f5; }
+      .leaderboard-item.top-1 { background: #e8f5e9; border: 1.5px solid #2E7D32; padding: 10px 8px; }
+      .leaderboard-item.top-2 { background: #f1f8e9; border: 1.5px solid #66BB6A; padding: 9px 8px; }
+      .leaderboard-item.top-3 { background: #f1f8e9; border: 1.5px solid #81C784; padding: 9px 8px; }
+      .leaderboard-rank {
+        width: 28px; height: 28px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.8rem; font-weight: 700; background: #f0f0f0; color: #888; flex-shrink: 0;
+      }
+      .leaderboard-rank.gold { background: #2E7D32; color: #fff; }
+      .leaderboard-rank.silver { background: #66BB6A; color: #fff; }
+      .leaderboard-rank.bronze { background: #81C784; color: #fff; }
+      .leaderboard-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; background: #e8e8e8; flex-shrink: 0; }
+      .leaderboard-species-photo { width: 36px; height: 36px; border-radius: 8px; object-fit: cover; background: #e8e8e8; flex-shrink: 0; }
+      .leaderboard-name { flex: 1; font-size: 0.9rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .leaderboard-name .sci-name { font-style: italic; font-size: 0.8rem; color: #888; display: block; }
+      .leaderboard-count { font-weight: 900; color: #2E7D32; font-size: 0.9rem; flex-shrink: 0; }
+
+      /* Taxonomy */
+      .taxonomy-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-bottom: 30px; }
+      .taxon-badge {
+        background: white; border-radius: 10px; padding: 14px;
+        border: 1px solid #e0e0e0;
+        display: flex; flex-direction: column; gap: 6px; text-align: center;
+        transition: all 0.2s;
+      }
+      .taxon-badge:hover { background: #e8f5e9; }
+      .taxon-badge .taxon-emoji { font-size: 1.8rem; }
+      .taxon-badge .taxon-name { font-size: 0.85rem; font-weight: 700; color: #1a1a1a; }
+      .taxon-badge .taxon-counts { font-size: 0.75rem; color: #888; }
+      .taxon-badge .taxon-bar { height: 4px; background: #e0e0e0; border-radius: 2px; overflow: hidden; margin-top: 4px; }
+      .taxon-badge .taxon-bar-fill { height: 100%; background: #2E7D32; border-radius: 2px; }
+
+      /* Days bar chart */
+
+      /* Highlights */
+      .highlights-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 20px; }
+      .highlight-card {
+        background: white; border-radius: 12px; padding: 20px;
+        border: 1px solid #e0e0e0;
+      }
+      .highlight-card h3 {
+        font-size: 1rem; color: #1a1a1a; font-weight: 700; margin-bottom: 14px;
+        padding-bottom: 10px; border-bottom: 2px solid #e0e0e0;
+        display: flex; align-items: center; gap: 8px;
+      }
+      .highlight-card h3 .highlight-count {
+        font-size: 0.85rem; font-weight: 700; color: #2E7D32;
+        margin-left: auto; background: #e8f5e9; padding: 2px 10px; border-radius: 12px;
+      }
+      .highlight-empty { color: #999; font-size: 0.9rem; padding: 10px 0; }
+      .scrollable-list { max-height: 560px; overflow-y: auto; }
+      .scrollable-list::-webkit-scrollbar { width: 6px; }
+      .scrollable-list::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+      .scrollable-list::-webkit-scrollbar-thumb:hover { background: #aaa; }
+
+      .species-list-item {
+        display: flex; align-items: center; gap: 10px; padding: 8px 6px;
+        border-radius: 8px; transition: background 0.2s; text-decoration: none; color: inherit;
+      }
+      .species-list-item:hover { background: #f5f5f5; }
+      .species-list-item img {
+        width: 40px; height: 40px; border-radius: 8px; object-fit: cover;
+        background: #e8e8e8; flex-shrink: 0;
+      }
+      .species-list-item .sli-info { flex: 1; min-width: 0; }
+      .species-list-item .sli-name { font-size: 0.9rem; font-weight: 700; color: #1a1a1a; }
+      .species-list-item .sli-sci { font-size: 0.8rem; font-style: italic; color: #888; }
+      .species-list-item .sli-meta { font-size: 0.75rem; color: #aaa; }
+      .species-list-item .sli-badge {
+        font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 10px;
+        background: #e8f5e9; color: #2E7D32; flex-shrink: 0; white-space: nowrap;
+      }
+
+      .user-list-item {
+        display: flex; align-items: center; gap: 10px; padding: 8px 6px;
+        border-radius: 8px; transition: background 0.2s; text-decoration: none; color: inherit;
+      }
+      .user-list-item:hover { background: #f5f5f5; }
+      .user-list-item img {
+        width: 36px; height: 36px; border-radius: 50%; object-fit: cover;
+        background: #e8e8e8; flex-shrink: 0;
+      }
+      .user-list-item .uli-name { font-size: 0.9rem; font-weight: 500; flex: 1; }
+      .user-list-item .uli-detail { font-size: 0.8rem; color: #888; flex-shrink: 0; }
+
+      /* Loading */
+      .loading { text-align: center; padding: 40px; color: #555; }
+      .spinner {
+        display: inline-block; width: 32px; height: 32px;
+        border: 3px solid #e0e0e0; border-top-color: #2E7D32;
+        border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 12px;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+
+      .section-loading {
+        display: flex; align-items: center; justify-content: center; gap: 10px;
+        padding: 40px; color: #aaa; font-size: 0.9rem;
+      }
+      .section-loading .spinner-sm {
+        display: inline-block; width: 18px; height: 18px;
+        border: 2px solid #e0e0e0; border-top-color: #2E7D32;
+        border-radius: 50%; animation: spin 0.8s linear infinite; flex-shrink: 0;
+      }
+      .skeleton-bar {
+        height: 14px; background: #e8e8e8; border-radius: 4px; animation: pulse 1.5s ease-in-out infinite;
+      }
+      .skeleton-bar.lg { height: 32px; width: 60%; margin: 0 0 8px; }
+      .skeleton-bar.sm { width: 50%; }
+      .stat-card .skeleton-bar { background: #e8e8e8; }
+      .skeleton-circle {
+        width: 160px; height: 160px; border-radius: 50%; background: #e8e8e8;
+        animation: pulse 1.5s ease-in-out infinite; margin: 0 auto;
+      }
+      .skeleton-obs-card {
+        border-radius: 8px; overflow: hidden; background: white;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08); border: 1px solid #e8e8e8;
+      }
+      .skeleton-obs-img {
+        width: 100%; padding-top: 100%; background: #e8e8e8;
+        animation: pulse 1.5s ease-in-out infinite;
+      }
+      .skeleton-obs-info { padding: 8px; }
+      .skeleton-leaderboard-rows { display: flex; flex-direction: column; gap: 10px; }
+      .skeleton-leaderboard-rows::before,
+      .skeleton-leaderboard-rows::after {
+        content: ""; display: block; height: 36px; background: #e8e8e8;
+        border-radius: 8px; animation: pulse 1.5s ease-in-out infinite;
+      }
+      .skeleton-leaderboard-rows::after { width: 90%; }
+      @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+      /* Sync status */
+      .sync-status {
+        font-size: 0.75rem; color: #999; text-align: right; margin-bottom: 16px;
+      }
+
+      /* Responsive */
+      @media (max-width: 900px) {
+        .leaderboards { grid-template-columns: 1fr; }
+        .highlights-grid { grid-template-columns: 1fr; }
+        .recent-obs-grid { grid-template-columns: repeat(3, 1fr); }
+      }
+      @media (max-width: 768px) {
+        body { padding: 24px 16px; }
+        header h1 { font-size: 1.5rem; }
+        .stats-bar { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .stat-card { padding: 14px 16px; }
+        .stat-card .stat-value { font-size: 1.5rem; }
+      }
+      @media (max-width: 768px) {
+        .project-header h1 { font-size: 1.5rem; }
+        .project-icon { width: 48px; height: 48px; }
+      }
+      @media (max-width: 480px) {
+        body { padding: 20px 12px; }
+        .back-button { font-size: 0.8rem; padding: 8px 12px; top: 10px; left: 10px; }
+        .stats-bar { grid-template-columns: 1fr; }
+        .project-header-content { flex-direction: column; gap: 10px; }
+        .recent-obs-grid { grid-template-columns: repeat(2, 1fr); }
+      }
+
+      /* Dark mode */
+      body.dark-mode { background: #1a1a1a; color: #e0e0e0; }
+      body.dark-mode header h1 { color: #e0e0e0; }
+      body.dark-mode header p { color: #aaa; }
+      body.dark-mode .back-button { background: #2d2d2d; color: #6abf69; border-color: #4a8c50; }
+      body.dark-mode .back-button:hover { background: #1e2e1e; }
+      body.dark-mode .project-header h1 { color: #e0e0e0; }
+      body.dark-mode .project-header a { color: #6abf69; }
+      body.dark-mode .project-selector { background: #2d2d2d; border-color: #444; }
+      body.dark-mode .project-selector h2 { color: #e0e0e0; }
+      body.dark-mode .project-link { background: #2d2d2d; border-color: #444; }
+      body.dark-mode .project-link:hover { background: #1e2e1e; }
+      body.dark-mode .project-link .pl-title { color: #e0e0e0; }
+      body.dark-mode .stat-card { background: #2d2d2d; border-color: #333; }
+      body.dark-mode .stat-card .stat-value { color: #e0e0e0; }
+      body.dark-mode .stat-card .stat-label { color: #aaa; }
+      body.dark-mode .section-title { color: #e0e0e0; }
+      body.dark-mode .leaderboard-card { background: #2d2d2d; border-color: #333; }
+      body.dark-mode .leaderboard-card h3 { color: #e0e0e0; border-bottom-color: #444; }
+      body.dark-mode .leaderboard-item:hover { background: #3d3d3d; }
+      body.dark-mode .leaderboard-rank { background: #3d3d3d; color: #aaa; }
+      body.dark-mode .leaderboard-name { color: #e0e0e0; }
+      body.dark-mode .leaderboard-item.top-1 { background: #1e2e1e; border-color: #2E7D32; }
+      body.dark-mode .leaderboard-item.top-2 { background: #1e2e1e; border-color: #4a8c50; }
+      body.dark-mode .leaderboard-item.top-3 { background: #1e2e1e; border-color: #66BB6A; }
+      body.dark-mode .leaderboard-rank.gold { background: #2E7D32; }
+      body.dark-mode .leaderboard-rank.silver { background: #4a8c50; }
+      body.dark-mode .leaderboard-rank.bronze { background: #66BB6A; }
+      body.dark-mode .leaderboard-count { color: #6abf69; }
+      body.dark-mode .taxon-badge { background: #2d2d2d; border-color: #333; }
+      body.dark-mode .taxon-badge .taxon-name { color: #e0e0e0; }
+      body.dark-mode .taxon-badge .taxon-bar { background: #444; }
+      body.dark-mode .taxon-badge .taxon-bar-fill { background: #4a8c50; }
+      body.dark-mode .highlight-card { background: #2d2d2d; border-color: #333; }
+      body.dark-mode .highlight-card h3 { color: #e0e0e0; border-bottom-color: #444; }
+      body.dark-mode .highlight-card h3 .highlight-count { background: rgba(46,125,50,0.3); color: #6abf69; }
+      body.dark-mode .species-list-item:hover { background: #3d3d3d; }
+      body.dark-mode .species-list-item .sli-name { color: #e0e0e0; }
+      body.dark-mode .species-list-item .sli-badge { background: rgba(46,125,50,0.3); color: #6abf69; }
+      body.dark-mode .user-list-item:hover { background: #3d3d3d; }
+      body.dark-mode .user-list-item .uli-name { color: #e0e0e0; }
+      body.dark-mode .user-list-item .uli-detail { color: #aaa; }
+      body.dark-mode .scrollable-list::-webkit-scrollbar-thumb { background: #555; }
+      body.dark-mode .scrollable-list::-webkit-scrollbar-thumb:hover { background: #777; }
+      body.dark-mode .highlight-empty { color: #777; }
+      body.dark-mode .sync-status { color: #777; }
+      body.dark-mode .skeleton-bar { background: #3d3d3d; }
+      body.dark-mode .skeleton-circle { background: #3d3d3d; }
+      body.dark-mode .skeleton-obs-card { background: #2d2d2d; border-color: #3d3d3d; }
+      body.dark-mode .skeleton-obs-img { background: #3d3d3d; }
+
+      /* Footer */
+      .site-footer {
+        background: #1a1a1a; margin-top: 60px; padding: 40px 20px; text-align: center;
+        margin-left: -20px; margin-right: -20px; margin-bottom: -20px;
+      }
+      .site-footer img { height: 120px; opacity: 0.9; }
+      .site-footer p { color: #888; font-size: 0.8rem; margin-top: 12px; }
+    </style>
+  </head>
+  <body>
+    <a href="projects.html" class="back-button"><span style="font-size:1rem">&#8592;</span> Projects</a>
+
+    <div class="container">
+      <header id="defaultHeader">
+        <img src="CNC_Logo_Grayscale.png" alt="City Nature Challenge" class="header-logo light" />
+        <img src="CNC_Logo_Knockout.png" alt="City Nature Challenge" class="header-logo dark" />
+        <h1>2025</h1>
+      </header>
+      <script>if(new URLSearchParams(location.search).get("project"))document.getElementById("defaultHeader").style.display="none";</script>
+      <header class="project-header" id="projectHeader" style="display:none"></header>
+
+      <div id="projectSelector" style="display:none"></div>
+      <div id="content" style="display:none">
+        <div id="headerSkeleton" class="project-header" style="text-align:center;margin-bottom:16px;padding-top:10px">
+          <div class="skeleton-bar" style="width:120px;height:60px;margin:0 auto 4px;border-radius:8px"></div>
+          <div class="skeleton-bar" style="width:300px;height:24px;margin:0 auto"></div>
+          <div class="skeleton-bar" style="width:120px;height:12px;margin:10px auto 0"></div>
+        </div>
+        <div id="syncStatus"></div>
+        <div id="statsBar" class="stats-bar">
+          <div class="stat-card"><div class="skeleton-bar lg"></div><div class="skeleton-bar sm"></div></div>
+          <div class="stat-card"><div class="skeleton-bar lg"></div><div class="skeleton-bar sm"></div></div>
+          <div class="stat-card"><div class="skeleton-bar lg"></div><div class="skeleton-bar sm"></div></div>
+          <div class="stat-card"><div class="skeleton-bar lg"></div><div class="skeleton-bar sm"></div></div>
+          <div class="stat-card"><div class="skeleton-bar lg"></div><div class="skeleton-bar sm"></div></div>
+          <div class="stat-card"><div class="skeleton-bar lg"></div><div class="skeleton-bar sm"></div></div>
+          <div class="stat-card"><div class="skeleton-bar lg"></div><div class="skeleton-bar sm"></div></div>
+          <div class="stat-card"><div class="skeleton-bar lg"></div><div class="skeleton-bar sm"></div></div>
+        </div>
+
+        <div class="section-title">Project Highlights</div>
+        <div id="highlightsContainer">
+          <div class="highlights-grid">
+            <div class="highlight-card"><h3><div class="skeleton-bar" style="width:60%;height:14px"></div></h3><div class="skeleton-bar" style="width:90%;height:10px;margin-bottom:10px"></div><div class="skeleton-bar" style="width:80%;height:10px;margin-bottom:10px"></div><div class="skeleton-bar" style="width:70%;height:10px"></div></div>
+            <div class="highlight-card"><h3><div class="skeleton-bar" style="width:60%;height:14px"></div></h3><div class="skeleton-bar" style="width:90%;height:10px;margin-bottom:10px"></div><div class="skeleton-bar" style="width:80%;height:10px;margin-bottom:10px"></div><div class="skeleton-bar" style="width:70%;height:10px"></div></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <script src="dark-mode.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+      const SUPABASE_URL = "https://kxxcmxlfairnauvunmwj.supabase.co";
+      const SUPABASE_KEY = "sb_publishable_lQU2ybO4fnJAKOrJBF8lrw_NnzJVev7";
+      const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+      const CNC_DAYS = ["2025-04-25", "2025-04-26", "2025-04-27", "2025-04-28"];
+
+      const ICONIC_TAXONS = {
+        Plantae: { emoji: "\u{1F33F}", name: "Plants" },
+        Fungi: { emoji: "\u{1F344}", name: "Fungi" },
+        Chromista: { emoji: "\u{1F7E4}", name: "Chromista" },
+        Protozoa: { emoji: "\u{1F9A0}", name: "Protozoa" },
+        Animalia: { emoji: "\u{1F43E}", name: "Other Animals" },
+        Mollusca: { emoji: "\u{1F40C}", name: "Mollusks" },
+        Arachnida: { emoji: "\u{1F577}\uFE0F", name: "Arachnids" },
+        Insecta: { emoji: "\u{1F98B}", name: "Insects" },
+        Actinopterygii: { emoji: "\u{1F41F}", name: "Fish" },
+        Amphibia: { emoji: "\u{1F438}", name: "Amphibians" },
+        Reptilia: { emoji: "\u{1F98E}", name: "Reptiles" },
+        Aves: { emoji: "\u{1F426}", name: "Birds" },
+        Mammalia: { emoji: "\u{1F98C}", name: "Mammals" },
+      };
+
+      const TAXON_COLORS = {
+        Aves: "#1b9e77", Plantae: "#66a61e", Insecta: "#e6ab02",
+        Fungi: "#7570b3", Mammalia: "#d95f02", Reptilia: "#e7298a",
+        Amphibia: "#a6761d", Arachnida: "#666666", Mollusca: "#377eb8",
+        Actinopterygii: "#4daf4a", Chromista: "#984ea3", Protozoa: "#ff7f00",
+        Animalia: "#a65628", Other: "#999999"
+      };
+
+      const params = new URLSearchParams(window.location.search);
+      const PROJECT_SLUG = params.get("project");
+
+      // ─── Drawing ───
+
+      // ─── Project list ───
+      async function showProjectList() {
+        const selector = document.getElementById("projectSelector");
+        selector.style.display = "block";
+
+        const { data, error } = await db
+          .from("cnc_projects")
+          .select("slug, title, icon_url, total_observations")
+          .order("total_observations", { ascending: false });
+
+        if (error || !data || data.length === 0) {
+          const { data: logs } = await db
+            .from("cnc_sync_log")
+            .select("project_slug, total_fetched, status")
+            .eq("status", "done")
+            .order("total_fetched", { ascending: false });
+
+          if (logs && logs.length > 0) {
+            selector.innerHTML = `
+              <h2>Select a synced project</h2>
+              <div class="project-list">
+                ${logs.map(l => `
+                  <a class="project-link" href="?project=${l.project_slug}">
+                    <div class="pl-info">
+                      <div class="pl-title">${l.project_slug}</div>
+                      <div class="pl-count">${(l.total_fetched || 0).toLocaleString()} observations synced</div>
+                    </div>
+                  </a>`).join("")}
+              </div>`;
+          } else {
+            selector.innerHTML = `<h2>No projects found</h2><p>No project data available yet.</p>`;
+          }
+          return;
+        }
+
+        selector.innerHTML = `
+          <h2>Select a CNC project</h2>
+          <div class="project-list">
+            ${data.map(p => `
+              <a class="project-link" href="?project=${p.slug}">
+                ${p.icon_url ? `<img src="${p.icon_url}" alt="" />` : ""}
+                <div class="pl-info">
+                  <div class="pl-title">${p.title || p.slug}</div>
+                  <div class="pl-count">${(p.total_observations || 0).toLocaleString()} observations</div>
+                </div>
+              </a>`).join("")}
+          </div>`;
+      }
+
+      // ─── Fetch project info from iNat API ───
+      async function fetchProjectInfo(slug) {
+        try {
+          const response = await fetch(`https://api.inaturalist.org/v1/projects/${slug}`);
+          if (!response.ok) return null;
+          const data = await response.json();
+          return data.results && data.results[0] ? data.results[0] : null;
+        } catch (e) {
+          console.warn("Could not fetch project info:", e.message);
+          return null;
+        }
+      }
+
+      function renderProjectHeader(project, slug) {
+        const header = document.getElementById("projectHeader");
+        document.getElementById("defaultHeader").style.display = "none";
+        const skeleton = document.getElementById("headerSkeleton");
+        if (skeleton) skeleton.style.display = "none";
+        header.style.display = "block";
+
+        const icon = project ? (project.icon || "logo.png") : "logo.png";
+        const title = project ? project.title : slug;
+        const projectUrl = `https://www.inaturalist.org/projects/${slug}`;
+
+        header.innerHTML = `
+          <img src="CNC_Logo_Grayscale.png" alt="City Nature Challenge" class="header-logo light" />
+          <img src="CNC_Logo_Knockout.png" alt="City Nature Challenge" class="header-logo dark" />
+          <h1>${title}</h1>
+          <p style="margin-top:8px"><a href="${projectUrl}" target="_blank">View on iNaturalist \u2192</a></p>
+        `;
+
+        document.title = `CNC: ${title}`;
+      }
+
+      // ─── Load project data from Supabase ───
+      async function loadProject(slug) {
+        // Show skeleton layout immediately
+        document.getElementById("defaultHeader").style.display = "none";
+        document.getElementById("content").style.display = "block";
+
+        // Fetch project info and computed stats in parallel
+        const projectInfoPromise = fetchProjectInfo(slug);
+        const { data: projectData } = await db
+          .from("cnc_projects")
+          .select("computed_stats, computed_at")
+          .eq("slug", slug)
+          .limit(1);
+
+        const projectInfo = await projectInfoPromise;
+        renderProjectHeader(projectInfo, slug);
+
+        const stats = projectData && projectData.length > 0 ? projectData[0].computed_stats : null;
+        const computedAt = projectData && projectData.length > 0 ? projectData[0].computed_at : null;
+
+        if (!stats) {
+          document.getElementById("content").innerHTML = `
+            <div style="text-align:center;padding:40px;color:#999">
+              No data available yet for <strong>${slug}</strong>.<br>
+              Check back soon!
+            </div>`;
+          return;
+        }
+
+        if (computedAt) {
+          const syncDate = new Date(computedAt).toLocaleString("en-US", { month: "long", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" });
+          document.getElementById("syncStatus").innerHTML = `
+            <div class="sync-status">
+              Last updated: ${syncDate}
+            </div>`;
+        }
+
+        renderStats(stats);
+        renderHighlights(stats);
+        renderObservationMap(slug);
+      }
+
+
+      // ─── Render stats ───
+      function renderStats(stats) {
+        const s = stats.summary;
+
+        const baseUrl = `https://www.inaturalist.org/observations?project_id=${PROJECT_SLUG}&verifiable=any`;
+        document.getElementById("statsBar").innerHTML = `
+          <a class="stat-card" href="${baseUrl}" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${s.total_observations.toLocaleString()}</div><div class="stat-label">📷 Observations</div></a>
+          <a class="stat-card" href="${baseUrl}&view=species" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${s.total_species.toLocaleString()}</div><div class="stat-label">🌿 Species</div></a>
+          <div class="stat-card"><div class="stat-value">${s.total_observations > 0 ? Math.round((s.total_species / s.total_observations) * 100) : 0}%</div><div class="stat-label">🧬 Species/Obs Ratio</div></div>
+          <div class="stat-card"><div class="stat-value">${s.total_observers > 0 ? (s.total_observations / s.total_observers).toFixed(1) : 0}</div><div class="stat-label">📊 Obs/Person</div></div>
+          <a class="stat-card" href="${baseUrl}&quality_grade=research" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${(s.research_grade || 0).toLocaleString()}</div><div class="stat-label">✅ Research Grade</div></a>
+          <div class="stat-card"><div class="stat-value">${s.total_observations > 0 ? Math.round((s.research_grade || 0) / s.total_observations * 100) : 0}%</div><div class="stat-label">✅ Research Grade Rate</div></div>
+          <a class="stat-card" href="${baseUrl}&view=observers" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${s.total_observers.toLocaleString()}</div><div class="stat-label">👥 Observers</div></a>
+          <div class="stat-card"><div class="stat-value" style="font-size:1.2rem;color:#888">No data</div><div class="stat-label">🔄 Species Re-observed</div></div>
+        `;
+      }
+
+
+      // ─── Observation Map ───
+      async function fetchWithRetry(url, retries = 3) {
+        for (let i = 0; i < retries; i++) {
+          try {
+            const res = await fetch(url);
+            if (res.ok) return res;
+            if (res.status === 429) { await new Promise(r => setTimeout(r, 2000 * (i + 1))); continue; }
+          } catch (e) { if (i === retries - 1) throw e; }
+          await new Promise(r => setTimeout(r, 1000 * (i + 1)));
+        }
+        throw new Error(`Failed to fetch ${url}`);
+      }
+
+      async function renderObservationMap(slug) {
+        const mapContainer = document.getElementById("observationMap");
+        const mapSubtitle = document.getElementById("mapSubtitle");
+
+        try {
+          // 1. Get project bounding box from iNat API
+          const projRes = await fetchWithRetry(`https://api.inaturalist.org/v1/projects/${slug}`);
+          const projData = await projRes.json();
+          const proj = projData.results && projData.results[0];
+
+          let bounds = null;
+          const allGeometries = [];
+          if (proj) {
+            // Collect all place IDs
+            const placeParam = (proj.search_parameters || []).find(p => p.field === "place_id");
+            let placeIds = [];
+            if (placeParam) {
+              placeIds = Array.isArray(placeParam.value) ? placeParam.value : [placeParam.value];
+            } else if (proj.place_id) {
+              placeIds = [proj.place_id];
+            }
+
+            if (placeIds.length > 0) {
+              // Fetch all places in parallel
+              const placeResults = await Promise.all(placeIds.map(id =>
+                fetchWithRetry(`https://api.inaturalist.org/v1/places/${id}`)
+                  .then(r => r.json())
+                  .then(d => d.results && d.results[0])
+                  .catch(() => null)
+              ));
+
+              let allLats = [], allLngs = [];
+              for (const place of placeResults) {
+                if (!place || !place.bounding_box_geojson) continue;
+                const coords = place.bounding_box_geojson.coordinates[0];
+                allLngs.push(...coords.map(c => c[0]));
+                allLats.push(...coords.map(c => c[1]));
+                const geom = place.geometry_geojson || place.bounding_box_geojson;
+                if (geom) allGeometries.push(geom);
+              }
+
+              if (allLats.length > 0) {
+                bounds = {
+                  swLat: Math.min(...allLats), swLng: Math.min(...allLngs),
+                  neLat: Math.max(...allLats), neLng: Math.max(...allLngs),
+                };
+              }
+            }
+          }
+
+          if (!bounds) {
+            mapSubtitle.textContent = "Map unavailable — no place data";
+            mapContainer.innerHTML = "";
+            return;
+          }
+
+          // 2. Calculate appropriate zoom level and tiles
+          function lat2tile(lat, z) { return Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * (1 << z)); }
+          function lng2tile(lng, z) { return Math.floor((lng + 180) / 360 * (1 << z)); }
+          function tile2lat(y, z) { const n = Math.PI - 2 * Math.PI * y / (1 << z); return 180 / Math.PI * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n))); }
+          function tile2lng(x, z) { return x / (1 << z) * 360 - 180; }
+
+          // Find zoom where area fits in ~4x4 tiles max
+          let zoom = 1;
+          for (let z = 14; z >= 1; z--) {
+            const tx1 = lng2tile(bounds.swLng, z);
+            const tx2 = lng2tile(bounds.neLng, z);
+            const ty1 = lat2tile(bounds.neLat, z);
+            const ty2 = lat2tile(bounds.swLat, z);
+            if (tx2 - tx1 <= 3 && ty2 - ty1 <= 3) {
+              zoom = z;
+              break;
+            }
+          }
+
+          const tileX1 = lng2tile(bounds.swLng, zoom);
+          const tileX2 = lng2tile(bounds.neLng, zoom);
+          const tileY1 = lat2tile(bounds.neLat, zoom);
+          const tileY2 = lat2tile(bounds.swLat, zoom);
+
+          const tilesX = tileX2 - tileX1 + 1;
+          const tilesY = tileY2 - tileY1 + 1;
+          const GRID_PER_TILE = 16;
+          const totalCols = tilesX * GRID_PER_TILE;
+          const totalRows = tilesY * GRID_PER_TILE;
+
+          mapContainer.style.gridTemplateColumns = `repeat(${totalCols}, 1fr)`;
+          mapContainer.style.aspectRatio = `${totalCols} / ${totalRows}`;
+
+          // 3. Fetch OSM tiles and UTFGrid data in parallel
+          const osmTilePromises = [];
+          const gridPromises = [];
+
+          for (let ty = tileY1; ty <= tileY2; ty++) {
+            for (let tx = tileX1; tx <= tileX2; tx++) {
+              osmTilePromises.push({ tx, ty, url: `https://tile.openstreetmap.org/${zoom}/${tx}/${ty}.png` });
+              gridPromises.push(
+                fetchWithRetry(`https://api.inaturalist.org/v1/grid/${zoom}/${tx}/${ty}.grid.json?project_id=${slug}`)
+                  .then(r => r.json())
+                  .then(d => ({ tx, ty, data: d }))
+                  .catch(() => ({ tx, ty, data: null }))
+              );
+            }
+          }
+
+          const gridResults = await Promise.all(gridPromises);
+
+          // 4. Parse UTFGrid to find cells with observations
+          const observedCells = new Set();
+          let totalLandCells = 0;
+
+          // 5. Point-in-polygon helpers
+          function pointInPolygon(lat, lng, ring) {
+            let inside = false;
+            for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+              const xi = ring[i][0], yi = ring[i][1];
+              const xj = ring[j][0], yj = ring[j][1];
+              if ((yi > lat) !== (yj > lat) && lng < (xj - xi) * (lat - yi) / (yj - yi) + xi) {
+                inside = !inside;
+              }
+            }
+            return inside;
+          }
+
+          function pointInAnyGeometry(lat, lng) {
+            if (allGeometries.length === 0) {
+              return lat >= bounds.swLat && lat <= bounds.neLat && lng >= bounds.swLng && lng <= bounds.neLng;
+            }
+            for (const geom of allGeometries) {
+              const polys = geom.type === "MultiPolygon" ? geom.coordinates : [geom.coordinates];
+              for (const poly of polys) {
+                if (pointInPolygon(lat, lng, poly[0])) return true;
+              }
+            }
+            return false;
+          }
+
+          // Parse UTFGrid and only count cells inside project boundary
+          for (const { tx, ty, data } of gridResults) {
+            if (!data || !data.grid || !data.keys || !data.data) continue;
+
+            const utfGridSize = data.grid.length;
+            const groupSize = utfGridSize / GRID_PER_TILE;
+
+            for (let row = 0; row < utfGridSize; row++) {
+              const gridRow = data.grid[row];
+              if (!gridRow) continue;
+              for (let col = 0; col < gridRow.length; col++) {
+                let id = gridRow.charCodeAt(col);
+                if (id >= 93) id--;
+                if (id >= 35) id--;
+                id -= 32;
+
+                if (id > 0) {
+                  const displayRow = (ty - tileY1) * GRID_PER_TILE + Math.floor(row / groupSize);
+                  const displayCol = (tx - tileX1) * GRID_PER_TILE + Math.floor(col / groupSize);
+                  const cellLng = tile2lng(tileX1 + (displayCol + 0.5) / GRID_PER_TILE, zoom);
+                  const cellLat = tile2lat(tileY1 + (displayRow + 0.5) / GRID_PER_TILE, zoom);
+                  if (pointInAnyGeometry(cellLat, cellLng)) {
+                    observedCells.add(`${displayRow},${displayCol}`);
+                  }
+                }
+              }
+            }
+          }
+
+          // Count total cells inside project boundary
+          for (let r = 0; r < totalRows; r++) {
+            for (let c = 0; c < totalCols; c++) {
+              const cellLng = tile2lng(tileX1 + (c + 0.5) / GRID_PER_TILE, zoom);
+              const cellLat = tile2lat(tileY1 + (r + 0.5) / GRID_PER_TILE, zoom);
+              if (pointInAnyGeometry(cellLat, cellLng)) {
+                totalLandCells++;
+              }
+            }
+          }
+
+          const coveragePct = totalLandCells > 0 ? Math.min(100, Math.round(observedCells.size / totalLandCells * 100)) : 0;
+
+          // 6. Render map
+          let html = "";
+          // Add OSM tiles as background
+          for (const tile of osmTilePromises) {
+            const left = ((tile.tx - tileX1) / tilesX * 100) + "%";
+            const top = ((tile.ty - tileY1) / tilesY * 100) + "%";
+            const w = (100 / tilesX) + "%";
+            const h = (100 / tilesY) + "%";
+            html += `<img src="${tile.url}" alt="" style="position:absolute;left:${left};top:${top};width:${w};height:${h};object-fit:fill;" />`;
+          }
+
+          // Add grid cells
+          for (let r = 0; r < totalRows; r++) {
+            for (let c = 0; c < totalCols; c++) {
+              const hasObs = observedCells.has(`${r},${c}`);
+              html += `<div style="aspect-ratio:1;position:relative;z-index:2;background:${hasObs ? "rgba(116,172,0,0.7)" : "transparent"}"></div>`;
+            }
+          }
+
+          // Add project boundary SVG overlay for all geometries
+          if (allGeometries.length > 0) {
+            const mapLngMin = tile2lng(tileX1, zoom);
+            const mapLngMax = tile2lng(tileX1 + tilesX, zoom);
+            const mapLatMax = tile2lat(tileY1, zoom);
+            const mapLatMin = tile2lat(tileY1 + tilesY, zoom);
+
+            function lngToX(lng) { return (lng - mapLngMin) / (mapLngMax - mapLngMin) * 100; }
+            function latToY(lat) { return (1 - (lat - mapLatMin) / (mapLatMax - mapLatMin)) * 100; }
+
+            let paths = "";
+            for (const geom of allGeometries) {
+              const rings = geom.type === "MultiPolygon"
+                ? geom.coordinates.flatMap(poly => poly)
+                : geom.coordinates;
+
+              rings.forEach(ring => {
+                const points = ring.map(c => `${lngToX(c[0])},${latToY(c[1])}`).join(" ");
+                paths += `<polygon points="${points}" fill="rgba(255,140,0,0.15)" stroke="#ff8c00" stroke-width="0.5" stroke-opacity="0.85" />`;
+              });
+            }
+
+            html += `<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none">${paths}</svg>`;
+          }
+
+          mapContainer.innerHTML = html;
+          mapSubtitle.innerHTML = `${observedCells.size} grid squares with observations · <span class="coverage-pct">${coveragePct}% coverage</span>`;
+
+        } catch (err) {
+          console.error("Map error:", err);
+          mapSubtitle.textContent = "Unable to load map";
+          mapContainer.innerHTML = "";
+        }
+      }
+
+      // ─── Taxonomy ───
+      function renderTaxonomy(stats) {
+        const taxStats = stats.taxonomy_stats || {};
+        const maxSp = Math.max(...Object.values(taxStats).map(s => s.species), 1);
+        const sorted = Object.entries(taxStats).sort((a, b) => b[1].species - a[1].species);
+
+        document.getElementById("taxonomyGrid").innerHTML = sorted.map(([key, s]) => {
+          const info = ICONIC_TAXONS[key] || { emoji: "\u2753", name: key };
+          const pct = Math.round(s.species / maxSp * 100);
+          const taxonUrl = `https://www.inaturalist.org/observations?project_id=${PROJECT_SLUG}&iconic_taxa=${key}&view=species&verifiable=any`;
+          return `<a class="taxon-badge" href="${taxonUrl}" target="_blank" style="text-decoration:none;color:inherit">
+            <div class="taxon-emoji">${info.emoji}</div>
+            <div class="taxon-name">${info.name}</div>
+            <div class="taxon-counts">${s.species} species \u00B7 ${s.obs} obs</div>
+            <div class="taxon-bar"><div class="taxon-bar-fill" style="width:${pct}%"></div></div>
+          </a>`;
+        }).join("");
+      }
+
+
+      // ─── Highlights ───
+      function renderHighlights(stats) {
+        const mostFaved = stats.most_faved || [];
+
+        // === Render helpers ===
+        function speciesItemHtml(s, badge) {
+          const name = s.common_name || s.taxon_name || "Unknown";
+          const sci = s.taxon_name || "";
+          const photo = s.photo_url || "";
+          const taxonUrl = s.taxon_id ? `https://www.inaturalist.org/taxa/${s.taxon_id}` : "#";
+          return `
+            <a class="species-list-item" href="${taxonUrl}" target="_blank">
+              ${photo ? `<img src="${photo}" alt="" />` : `<span style="width:40px;height:40px;border-radius:8px;background:#e8e8e8;display:inline-block;flex-shrink:0"></span>`}
+              <div class="sli-info">
+                <div class="sli-name">${name}</div>
+                ${sci && sci !== name ? `<div class="sli-sci">${sci}</div>` : ""}
+              </div>
+              ${badge ? `<span class="sli-badge">${badge}</span>` : ""}
+            </a>`;
+        }
+
+        function userListHtml(items, detailFn) {
+          return items.map(u => {
+            const url = `https://www.inaturalist.org/observations?project_id=${PROJECT_SLUG}&user_id=${u.login}&verifiable=any`;
+            return `
+              <a class="user-list-item" href="${url}" target="_blank">
+                ${u.avatar ? `<img src="${u.avatar}" alt="" />` : `<span style="width:36px;height:36px;border-radius:50%;background:#e8e8e8;display:inline-block;flex-shrink:0"></span>`}
+                <span class="uli-name">${u.login}</span>
+                <span class="uli-detail">${detailFn(u)}</span>
+              </a>`;
+          }).join("");
+        }
+
+        // === Build HTML ===
+        let html = "";
+
+        // Data
+        const topSpecies = stats.top_observed_species || [];
+        const topIdentifiers = (stats.identifications || {}).top_identifiers || [];
+        const firstObservations = stats.first_observations || [];
+        const endangered = stats.endangered_species || { total: 0, species: [] };
+        const iucnColors = { CR: "#d32f2f", EN: "#e65100", VU: "#f9a825", NT: "#1976d2" };
+        const categorySummary = ["CR", "EN", "VU", "NT"]
+          .map(k => {
+            const count = endangered[{CR:"critically_endangered",EN:"endangered",VU:"vulnerable",NT:"near_threatened"}[k]] || 0;
+            return count > 0 ? `<span style="color:${iucnColors[k]};font-weight:700">${count} ${k}</span>` : null;
+          }).filter(Boolean).join(" · ");
+        const topFavorited = [...mostFaved].sort((a, b) => (b.faves_count || 0) - (a.faves_count || 0)).slice(0, 10);
+        const topCommented = [...mostFaved].sort((a, b) => (b.comments_count || 0) - (a.comments_count || 0)).slice(0, 10);
+
+        function obsItemHtml(o, badge) {
+          const name = o.common_name || o.taxon_name || "Unknown";
+          const photo = o.photo_url || "";
+          const url = `https://www.inaturalist.org/observations/${o.inat_id}`;
+          return `
+            <a class="species-list-item" href="${url}" target="_blank">
+              ${photo ? `<img src="${photo}" alt="" />` : `<span style="width:40px;height:40px;border-radius:8px;background:#e8e8e8;display:inline-block;flex-shrink:0"></span>`}
+              <div class="sli-info">
+                <div class="sli-name">${name}</div>
+                <div class="sli-meta">by ${o.user_login || "?"}</div>
+              </div>
+              <span class="sli-badge">${badge}</span>
+            </a>`;
+        }
+
+        const endemicSpecies = stats.endemic_species || [];
+
+        // Row 1: Observations Coverage Map + First Observations
+        html += `<div class="highlights-grid">`;
+        html += `<div class="highlight-card">
+          <h3>\u{1F5FA}\uFE0F Observations Coverage</h3>
+          <div class="map-subtitle" id="mapSubtitle">Loading map...</div>
+          <div class="map-container" id="observationMap" style="grid-template-columns: repeat(32, 1fr)"></div>
+        </div>`;
+        html += `<div class="highlight-card">
+          <h3>\u{2B50} First Observations <span class="highlight-count">${firstObservations.length} species</span></h3>
+          <p style="font-size:0.85rem;color:#888;margin-bottom:12px">Species first observed globally or locally during this event</p>
+          ${firstObservations.length > 0
+            ? `<div class="scrollable-list">${firstObservations.map(s => {
+                const name = s.common_name || s.taxon_name || "Unknown";
+                const sci = s.taxon_name || "";
+                const photo = s.photo_url || "";
+                const taxonUrl = s.taxon_id ? "https://www.inaturalist.org/observations?project_id=" + PROJECT_SLUG + "&taxon_id=" + s.taxon_id + "&verifiable=any" : "#";
+                return '<a class="species-list-item" href="' + taxonUrl + '" target="_blank">'
+                  + (photo ? '<img src="' + photo + '" alt="" />' : '<span style="width:40px;height:40px;border-radius:8px;background:#e8e8e8;display:inline-block;flex-shrink:0"></span>')
+                  + '<div class="sli-info">'
+                  + '<div class="sli-name">' + name + '</div>'
+                  + (sci && sci !== name ? '<div class="sli-sci">' + sci + '</div>' : '')
+                  + '</div>'
+                  + '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'
+                  + (s.first_global_obs ? '<span style="background:linear-gradient(135deg,#FFD700,#FFA000);color:#333;font-size:0.7rem;font-weight:700;padding:3px 8px;border-radius:10px;white-space:nowrap;box-shadow:0 1px 3px rgba(255,160,0,0.3)">\u2B50 1st global</span>' : '')
+                  + (s.first_local_obs ? '<span style="background:linear-gradient(135deg,#4CAF50,#2E7D32);color:#fff;font-size:0.7rem;font-weight:700;padding:3px 8px;border-radius:10px;white-space:nowrap;box-shadow:0 1px 3px rgba(46,125,50,0.3)">\u{1F4CD} 1st local</span>' : '')
+                  + '<span class="sli-badge">' + (s.global_obs_count || 0) + ' global' + (s.local_obs_count != null ? ' \u00B7 ' + s.local_obs_count + ' local' : '') + '</span>'
+                  + '</div></a>';
+              }).join("")}</div>`
+            : `<div class="highlight-empty">No first observations found</div>`}
+        </div>`;
+        html += `</div>`;
+
+        // Row 2: Endangered Species + Endemic Species
+        html += `<div class="highlights-grid">`;
+        html += `<div class="highlight-card">
+          <h3>\u{1F6A8} Endangered Species <span class="highlight-count">${endangered.total} species</span></h3>
+          <p style="font-size:0.85rem;color:#888;margin-bottom:8px">Species with IUCN conservation status observed in this project</p>
+          ${categorySummary ? `<p style="font-size:0.9rem;margin-bottom:12px">${categorySummary}</p>` : ""}
+          ${endangered.species && endangered.species.length > 0
+            ? `<div class="scrollable-list">${endangered.species.map(s => {
+                const name = s.common_name || s.taxon_name || "Unknown";
+                const sci = s.taxon_name || "";
+                const photo = s.photo_url || "";
+                const color = iucnColors[s.status] || "#666";
+                const taxonUrl = s.taxon_id ? "https://www.inaturalist.org/observations?project_id=" + PROJECT_SLUG + "&taxon_id=" + s.taxon_id + "&verifiable=any" : "#";
+                return '<a class="species-list-item" href="' + taxonUrl + '" target="_blank">'
+                  + (photo ? '<img src="' + photo + '" alt="" />' : '<span style="width:40px;height:40px;border-radius:8px;background:#e8e8e8;display:inline-block;flex-shrink:0"></span>')
+                  + '<div class="sli-info">'
+                  + '<div class="sli-name">' + name + '</div>'
+                  + (sci && sci !== name ? '<div class="sli-sci">' + sci + '</div>' : '')
+                  + '</div>'
+                  + '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'
+                  + '<span style="background:' + color + ';color:#fff;font-size:0.7rem;font-weight:700;padding:3px 8px;border-radius:10px;white-space:nowrap">' + s.status + '</span>'
+                  + '<span class="sli-badge">' + s.project_obs_count + ' obs</span>'
+                  + '</div></a>';
+              }).join("")}</div>`
+            : `<div class="highlight-empty">No endangered species data available</div>`}
+        </div>`;
+        html += `<div class="highlight-card">
+          <h3>\u{1F3DD}\uFE0F Endemic Species <span class="highlight-count">${endemicSpecies.length} species</span></h3>
+          <p style="font-size:0.85rem;color:#888;margin-bottom:12px">Species native and restricted to this region</p>
+          ${endemicSpecies.length > 0
+            ? `<div class="scrollable-list">${endemicSpecies.map(s => speciesItemHtml(s, s.obs_count ? s.obs_count + ' obs' : '')).join("")}</div>`
+            : `<div class="highlight-empty">No endemic species data available</div>`}
+        </div>`;
+        html += `</div>`;
+
+        // Row 3: Most Observed Species + Top Identifiers
+        html += `<div class="highlights-grid">`;
+        html += `<div class="highlight-card">
+          <h3>\u{1F3C5} Most Observed Species <span class="highlight-count">Top 10</span></h3>
+          <p style="font-size:0.85rem;color:#888;margin-bottom:12px">Species with the most observations</p>
+          ${topSpecies.length > 0
+            ? topSpecies.map((s, i) => {
+                const taxonUrl = s.taxon_id ? `https://www.inaturalist.org/taxa/${s.taxon_id}` : "#";
+                return `<a class="species-list-item" href="${taxonUrl}" target="_blank">
+                  ${s.photo ? `<img src="${s.photo}" alt="" />` : `<span style="width:40px;height:40px;border-radius:8px;background:#e8e8e8;display:inline-block;flex-shrink:0"></span>`}
+                  <div class="sli-info">
+                    <div class="sli-name">${s.name}${s.sci && s.sci !== s.name ? ` <span style="font-style:italic;font-weight:400;color:#888">${s.sci}</span>` : ""}</div>
+                  </div>
+                  <span class="sli-badge">${s.count} obs</span>
+                </a>`;
+              }).join("")
+            : `<div class="highlight-empty">No data available</div>`}
+        </div>`;
+        html += `<div class="highlight-card">
+          <h3>\u{1F50D} Top Identifiers <span class="highlight-count">Top 10</span></h3>
+          <p style="font-size:0.85rem;color:#888;margin-bottom:12px">Users who contributed the most identifications</p>
+          ${topIdentifiers.length > 0
+            ? topIdentifiers.map((item, i) => {
+                const url = `https://www.inaturalist.org/identifications?project_id=${PROJECT_SLUG}&user_id=${item.login}`;
+                return `<a class="species-list-item" href="${url}" target="_blank">
+                  ${item.icon ? `<img src="${item.icon}" alt="" style="border-radius:50%" />` : `<span style="width:40px;height:40px;border-radius:50%;background:#e8e8e8;display:inline-block;flex-shrink:0"></span>`}
+                  <div class="sli-info">
+                    <div class="sli-name">${item.login}</div>
+                  </div>
+                  <span class="sli-badge">${item.count} IDs</span>
+                </a>`;
+              }).join("")
+            : `<div class="highlight-empty">No data available</div>`}
+        </div>`;
+        html += `</div>`;
+
+        // Row 4: Most Favorited + Most Commented
+        html += `<div class="highlights-grid">`;
+        html += `<div class="highlight-card">
+          <h3>\u2764\uFE0F Most Favorited <span class="highlight-count">Top 10</span></h3>
+          <p style="font-size:0.85rem;color:#888;margin-bottom:12px">Observations with the most favorites</p>
+          ${topFavorited.length > 0
+            ? topFavorited.map(o => obsItemHtml(o, `\u2764\uFE0F ${o.faves_count || 0}`)).join("")
+            : `<div class="highlight-empty">No favorited observations</div>`}
+        </div>`;
+        html += `<div class="highlight-card">
+          <h3>\u{1F4AC} Most Commented <span class="highlight-count">Top 10</span></h3>
+          <p style="font-size:0.85rem;color:#888;margin-bottom:12px">Observations with the most comments</p>
+          ${topCommented.length > 0
+            ? topCommented.map(o => obsItemHtml(o, `\u{1F4AC} ${o.comments_count || 0}`)).join("")
+            : `<div class="highlight-empty">No commented observations</div>`}
+        </div>`;
+        html += `</div>`;
+
+        document.getElementById("highlightsContainer").innerHTML = html;
+      }
+
+      // ─── Init ───
+      if (PROJECT_SLUG) {
+        loadProject(PROJECT_SLUG);
+      } else {
+        showProjectList();
+      }
+    </script>
+    <footer class="site-footer">
+      <img src="CNC20_OrganizedLockup_W.png" alt="City Nature Challenge" />
+    </footer>
+  </body>
+</html>
