@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CNC Project Stats</title>
+    <link rel="icon" href="favicon.ico" />
+    <link rel="stylesheet" href="dark-mode.css" />
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        line-height: 1.6; background: #f8f9fa; min-height: 100vh; color: #333; padding: 40px 20px;
+      }
+      .container { max-width: 1200px; width: 100%; margin: 0 auto; }
+      .back-button {
+        position: fixed; top: 20px; left: 20px;
+        background: #74ac00; color: white; text-decoration: none;
+        font-size: 0.9rem; font-weight: 600; padding: 10px 16px;
+        border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        z-index: 1000; display: inline-flex; align-items: center; gap: 6px;
+      }
+      .back-button:hover { background: #659900; }
+
+      header { text-align: center; margin-bottom: 30px; padding-top: 20px; }
+      header h1 { font-size: 2rem; color: #2c3e50; margin-bottom: 8px; }
+      header p { color: #666; font-size: 1rem; }
+
+      /* Project header */
+      .project-header { text-align: center; margin-bottom: 30px; padding-top: 20px; }
+      .project-header-content {
+        display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 10px;
+      }
+      .project-icon { width: 64px; height: 64px; border-radius: 12px; object-fit: cover; }
+      .project-header h1 { font-size: 2rem; color: #2c3e50; font-weight: 700; }
+      .project-header .description { font-size: 1rem; color: #666; }
+      .project-header a { color: #74ac00; text-decoration: none; }
+      .project-header a:hover { text-decoration: underline; }
+
+      /* Project selector */
+      .project-selector {
+        background: white; border-radius: 12px; padding: 24px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e8e8e8;
+        margin-bottom: 30px; text-align: center;
+      }
+      .project-selector h2 { font-size: 1.1rem; color: #2c3e50; margin-bottom: 16px; }
+      .project-list {
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px;
+      }
+      .project-link {
+        display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+        background: #f8f9fa; border-radius: 8px; text-decoration: none; color: inherit;
+        border: 1px solid #e8e8e8; transition: all 0.2s;
+      }
+      .project-link:hover { border-color: #74ac00; background: #f0f8e0; transform: translateY(-1px); }
+      .project-link img { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; }
+      .project-link .pl-info { flex: 1; text-align: left; min-width: 0; }
+      .project-link .pl-title { font-size: 0.9rem; font-weight: 600; color: #2c3e50; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .project-link .pl-count { font-size: 0.8rem; color: #888; }
+
+      /* Stats */
+      .stats-bar { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 30px; }
+      .stat-card {
+        background: white; border-radius: 10px; padding: 16px 24px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08); border: 1px solid #e8e8e8;
+        text-align: center; min-width: 140px; flex: 1;
+      }
+      .stat-card .stat-value { font-size: 2rem; font-weight: 700; color: #74ac00; }
+      .stat-card .stat-label { font-size: 0.8rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+
+      /* Donuts */
+      .donuts-row { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; margin-bottom: 30px; }
+      .donut-card {
+        background: white; border-radius: 12px; padding: 20px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08); border: 1px solid #e8e8e8;
+        display: flex; flex-direction: column; align-items: center; gap: 12px;
+        flex: 1; min-width: 220px;
+      }
+      .donut-card-title { font-size: 0.85rem; font-weight: 700; color: #2c3e50; text-transform: uppercase; letter-spacing: 0.5px; }
+      .donut-container { position: relative; width: 160px; height: 160px; }
+      .donut-container canvas { width: 100%; height: 100%; }
+      .donut-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; pointer-events: none; }
+      .donut-center .donut-value { font-size: 1.6rem; font-weight: 700; color: #2c3e50; line-height: 1.1; }
+      .donut-center .donut-label { font-size: 0.7rem; color: #888; text-transform: uppercase; }
+      .donut-legend { display: flex; flex-direction: column; gap: 4px; width: 100%; }
+      .donut-legend-item { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; color: #555; }
+      .donut-legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+      .donut-legend-value { margin-left: auto; font-weight: 600; color: #333; }
+
+      /* Section titles */
+      .section-title {
+        font-size: 1.3rem; color: #2c3e50; margin: 30px 0 16px; padding: 8px 12px;
+        background: linear-gradient(90deg, rgba(116,172,0,0.1) 0%, transparent 100%);
+        border-left: 4px solid #74ac00; border-radius: 0 8px 8px 0; font-weight: 700;
+      }
+
+      /* Recent observations */
+      .recent-obs-grid {
+        display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 30px;
+      }
+      .recent-obs-card {
+        border-radius: 8px; overflow: hidden; background: white;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08); border: 1px solid #e8e8e8;
+        text-decoration: none; color: inherit; display: block; transition: all 0.2s;
+      }
+      .recent-obs-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+      .recent-obs-img-wrap {
+        position: relative; width: 100%; padding-top: 100%; overflow: hidden; background: #e8e8e8;
+      }
+      .recent-obs-img-wrap > img:first-child {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;
+      }
+      .recent-obs-rg {
+        position: absolute; top: 4px; left: 4px; background: #74ac00; color: white;
+        font-size: 0.6rem; font-weight: 700; padding: 1px 6px; border-radius: 3px;
+      }
+      .recent-obs-avatar {
+        position: absolute; bottom: 4px; right: 4px; width: 24px; height: 24px;
+        border-radius: 50%; border: 2px solid white; object-fit: cover; background: #ccc;
+      }
+      .recent-obs-info { padding: 6px 8px; }
+      .recent-obs-info .obs-sci { font-size: 0.75rem; font-weight: 600; color: #2c3e50; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .recent-obs-info .obs-common { font-size: 0.7rem; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .recent-obs-info .obs-meta { font-size: 0.65rem; color: #aaa; margin-top: 2px; display: flex; gap: 6px; }
+
+      /* Leaderboards */
+      .leaderboards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
+      .leaderboard-card {
+        background: white; border-radius: 12px; padding: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e8e8e8;
+        display: flex; flex-direction: column; gap: 6px;
+      }
+      .leaderboard-card h3 { font-size: 1rem; color: #2c3e50; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 2px solid #f0f0f0; display: flex; align-items: center; gap: 8px; }
+      .leaderboard-item {
+        display: flex; align-items: center; gap: 10px; padding: 8px 6px;
+        border-radius: 8px; text-decoration: none; color: inherit; transition: background 0.2s;
+      }
+      .leaderboard-item:hover { background: #f8f9fa; }
+      .leaderboard-item.top-1 { background: linear-gradient(135deg, #fff9e6, #fff3cc); border: 1.5px solid #ffd700; padding: 10px 8px; }
+      .leaderboard-item.top-2 { background: linear-gradient(135deg, #f8f8f8, #f0f0f0); border: 1.5px solid #c0c0c0; padding: 9px 8px; }
+      .leaderboard-item.top-3 { background: linear-gradient(135deg, #fdf5ee, #f9ece0); border: 1.5px solid #cd7f32; padding: 9px 8px; }
+      .leaderboard-rank {
+        width: 28px; height: 28px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.8rem; font-weight: 700; background: #f0f0f0; color: #888; flex-shrink: 0;
+      }
+      .leaderboard-rank.gold { background: #ffd700; color: #7a6200; box-shadow: 0 2px 8px rgba(255,215,0,0.4); }
+      .leaderboard-rank.silver { background: #c0c0c0; color: #555; box-shadow: 0 2px 6px rgba(192,192,192,0.4); }
+      .leaderboard-rank.bronze { background: #cd7f32; color: #fff; box-shadow: 0 2px 6px rgba(205,127,50,0.4); }
+      .leaderboard-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; background: #e8e8e8; flex-shrink: 0; }
+      .leaderboard-species-photo { width: 36px; height: 36px; border-radius: 8px; object-fit: cover; background: #e8e8e8; flex-shrink: 0; }
+      .leaderboard-name { flex: 1; font-size: 0.9rem; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .leaderboard-name .sci-name { font-style: italic; font-size: 0.8rem; color: #888; display: block; }
+      .leaderboard-count { font-weight: 700; color: #74ac00; font-size: 0.9rem; flex-shrink: 0; }
+
+      /* Taxonomy */
+      .taxonomy-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-bottom: 30px; }
+      .taxon-badge {
+        background: white; border-radius: 10px; padding: 14px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.06); border: 1px solid #e8e8e8;
+        display: flex; flex-direction: column; gap: 6px; text-align: center;
+        transition: all 0.2s;
+      }
+      .taxon-badge:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+      .taxon-badge .taxon-emoji { font-size: 1.8rem; }
+      .taxon-badge .taxon-name { font-size: 0.85rem; font-weight: 600; color: #2c3e50; }
+      .taxon-badge .taxon-counts { font-size: 0.75rem; color: #888; }
+      .taxon-badge .taxon-bar { height: 4px; background: #f0f0f0; border-radius: 2px; overflow: hidden; margin-top: 4px; }
+      .taxon-badge .taxon-bar-fill { height: 100%; background: #74ac00; border-radius: 2px; }
+
+      /* Days bar chart */
+      .days-grid {
+        display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 30px;
+      }
+      .day-card {
+        background: white; border-radius: 14px; padding: 20px 16px; text-align: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: 1px solid #e8e8e8;
+        position: relative; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s;
+      }
+      .day-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
+      .day-card.best-day { border-color: #74ac00; border-width: 2px; }
+      .day-card.best-day::after {
+        content: "⭐ Best Day!"; position: absolute; top: 8px; right: 8px;
+        background: linear-gradient(135deg, #74ac00, #9acd32); color: white;
+        font-size: 0.6rem; font-weight: 700; padding: 3px 8px; border-radius: 6px;
+        text-transform: uppercase; letter-spacing: 0.3px;
+      }
+      .day-card .day-emoji { font-size: 2rem; margin-bottom: 4px; }
+      .day-card .day-name { font-size: 1.1rem; font-weight: 700; color: #333; }
+      .day-card .day-date-label { font-size: 0.75rem; color: #999; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+      .day-card .day-obs-big { font-size: 2.2rem; font-weight: 800; color: #74ac00; line-height: 1; }
+      .day-card .day-obs-label { font-size: 0.7rem; color: #999; text-transform: uppercase; margin-bottom: 12px; }
+      .day-card .day-mini-stats { display: flex; justify-content: center; gap: 24px; }
+      .day-card .day-mini-stat { text-align: center; }
+      .day-card .day-mini-value { font-size: 1.1rem; font-weight: 700; color: #555; }
+      .day-card .day-mini-label { font-size: 0.65rem; color: #999; text-transform: uppercase; letter-spacing: 0.3px; }
+      @media (max-width: 900px) { .days-grid { grid-template-columns: repeat(2, 1fr); } }
+      @media (max-width: 500px) { .days-grid { grid-template-columns: 1fr; } }
+
+      /* Highlights */
+      .highlights-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 20px; }
+      .highlight-card {
+        background: white; border-radius: 12px; padding: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e8e8e8;
+      }
+      .highlight-card h3 {
+        font-size: 1rem; color: #2c3e50; margin-bottom: 14px;
+        padding-bottom: 10px; border-bottom: 2px solid #f0f0f0;
+        display: flex; align-items: center; gap: 8px;
+      }
+      .highlight-card h3 .highlight-count {
+        font-size: 0.85rem; font-weight: 600; color: #74ac00;
+        margin-left: auto; background: #e8f5e9; padding: 2px 10px; border-radius: 12px;
+      }
+      .highlight-empty { color: #999; font-size: 0.9rem; padding: 10px 0; }
+      .scrollable-list { max-height: 560px; overflow-y: auto; }
+      .scrollable-list::-webkit-scrollbar { width: 6px; }
+      .scrollable-list::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+      .scrollable-list::-webkit-scrollbar-thumb:hover { background: #aaa; }
+
+      .species-list-item {
+        display: flex; align-items: center; gap: 10px; padding: 8px 6px;
+        border-radius: 8px; transition: background 0.2s; text-decoration: none; color: inherit;
+      }
+      .species-list-item:hover { background: #f8f9fa; }
+      .species-list-item img {
+        width: 40px; height: 40px; border-radius: 8px; object-fit: cover;
+        background: #e8e8e8; flex-shrink: 0;
+      }
+      .species-list-item .sli-info { flex: 1; min-width: 0; }
+      .species-list-item .sli-name { font-size: 0.9rem; font-weight: 600; color: #2c3e50; }
+      .species-list-item .sli-sci { font-size: 0.8rem; font-style: italic; color: #888; }
+      .species-list-item .sli-meta { font-size: 0.75rem; color: #aaa; }
+      .species-list-item .sli-badge {
+        font-size: 0.75rem; font-weight: 600; padding: 2px 8px; border-radius: 10px;
+        background: #f0f0f0; color: #666; flex-shrink: 0; white-space: nowrap;
+      }
+
+      .user-list-item {
+        display: flex; align-items: center; gap: 10px; padding: 8px 6px;
+        border-radius: 8px; transition: background 0.2s; text-decoration: none; color: inherit;
+      }
+      .user-list-item:hover { background: #f8f9fa; }
+      .user-list-item img {
+        width: 36px; height: 36px; border-radius: 50%; object-fit: cover;
+        background: #e8e8e8; flex-shrink: 0;
+      }
+      .user-list-item .uli-name { font-size: 0.9rem; font-weight: 500; flex: 1; }
+      .user-list-item .uli-detail { font-size: 0.8rem; color: #888; flex-shrink: 0; }
+
+      /* Loading */
+      .loading { text-align: center; padding: 40px; color: #666; }
+      .spinner {
+        display: inline-block; width: 32px; height: 32px;
+        border: 3px solid #e0e0e0; border-top-color: #74ac00;
+        border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 12px;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+
+      .section-loading {
+        display: flex; align-items: center; justify-content: center; gap: 10px;
+        padding: 40px; color: #aaa; font-size: 0.9rem;
+      }
+      .section-loading .spinner-sm {
+        display: inline-block; width: 18px; height: 18px;
+        border: 2px solid #e0e0e0; border-top-color: #74ac00;
+        border-radius: 50%; animation: spin 0.8s linear infinite; flex-shrink: 0;
+      }
+      .skeleton-bar {
+        height: 14px; background: #e8e8e8; border-radius: 4px; animation: pulse 1.5s ease-in-out infinite;
+      }
+      .skeleton-bar.lg { height: 32px; width: 60%; margin: 0 auto 8px; }
+      .skeleton-bar.sm { width: 50%; margin: 0 auto; }
+      .skeleton-circle {
+        width: 160px; height: 160px; border-radius: 50%; background: #e8e8e8;
+        animation: pulse 1.5s ease-in-out infinite; margin: 0 auto;
+      }
+      .skeleton-obs-card {
+        border-radius: 8px; overflow: hidden; background: white;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08); border: 1px solid #e8e8e8;
+      }
+      .skeleton-obs-img {
+        width: 100%; padding-top: 100%; background: #e8e8e8;
+        animation: pulse 1.5s ease-in-out infinite;
+      }
+      .skeleton-obs-info { padding: 8px; }
+      .skeleton-leaderboard-rows { display: flex; flex-direction: column; gap: 10px; }
+      .skeleton-leaderboard-rows::before,
+      .skeleton-leaderboard-rows::after {
+        content: ""; display: block; height: 36px; background: #e8e8e8;
+        border-radius: 8px; animation: pulse 1.5s ease-in-out infinite;
+      }
+      .skeleton-leaderboard-rows::after { width: 90%; }
+      @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+      /* Sync status */
+      .sync-status {
+        background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 8px;
+        padding: 10px 16px; font-size: 0.85rem; color: #2e7d32; text-align: center; margin-bottom: 20px;
+      }
+
+      /* Responsive */
+      @media (max-width: 900px) {
+        .leaderboards { grid-template-columns: 1fr; }
+        .highlights-grid { grid-template-columns: 1fr; }
+        .recent-obs-grid { grid-template-columns: repeat(3, 1fr); }
+      }
+      @media (max-width: 768px) {
+        body { padding: 24px 16px; }
+        header h1 { font-size: 1.5rem; }
+        .stats-bar { gap: 10px; }
+        .stat-card { padding: 12px 16px; min-width: 100px; }
+        .stat-card .stat-value { font-size: 1.5rem; }
+      }
+      @media (max-width: 768px) {
+        .project-header h1 { font-size: 1.5rem; }
+        .project-icon { width: 48px; height: 48px; }
+      }
+      @media (max-width: 480px) {
+        body { padding: 20px 12px; }
+        .back-button { font-size: 0.8rem; padding: 8px 12px; top: 10px; left: 10px; }
+        .stats-bar { flex-direction: column; }
+        .project-header-content { flex-direction: column; gap: 10px; }
+        .recent-obs-grid { grid-template-columns: repeat(2, 1fr); }
+      }
+
+      /* Dark mode */
+      body.dark-mode { background: #1a1a1a; color: #e0e0e0; }
+      body.dark-mode header h1 { color: #e0e0e0; }
+      body.dark-mode header p { color: #aaa; }
+      body.dark-mode .project-header h1 { color: #e0e0e0; }
+      body.dark-mode .project-header .description { color: #aaa; }
+      body.dark-mode .project-selector { background: #2d2d2d; border-color: #444; }
+      body.dark-mode .project-selector h2 { color: #e0e0e0; }
+      body.dark-mode .project-link { background: #333; border-color: #444; }
+      body.dark-mode .project-link:hover { border-color: #74ac00; background: #3a3a2a; }
+      body.dark-mode .project-link .pl-title { color: #e0e0e0; }
+      body.dark-mode .stat-card { background: #2d2d2d; border-color: #444; }
+      body.dark-mode .stat-card .stat-label { color: #aaa; }
+      body.dark-mode .donut-card { background: #2d2d2d; border-color: #444; }
+      body.dark-mode .donut-card-title { color: #e0e0e0; }
+      body.dark-mode .donut-center .donut-value { color: #e0e0e0; }
+      body.dark-mode .donut-legend-item { color: #aaa; }
+      body.dark-mode .donut-legend-value { color: #ccc; }
+      body.dark-mode .section-title { color: #e0e0e0; }
+      body.dark-mode .recent-obs-card { background: #2d2d2d; border-color: #444; }
+      body.dark-mode .recent-obs-info .obs-sci { color: #e0e0e0; }
+      body.dark-mode .recent-obs-info .obs-common { color: #aaa; }
+      body.dark-mode .recent-obs-info .obs-meta { color: #777; }
+      body.dark-mode .leaderboard-card { background: #2d2d2d; border-color: #444; }
+      body.dark-mode .leaderboard-card h3 { color: #e0e0e0; border-bottom-color: #444; }
+      body.dark-mode .leaderboard-item:hover { background: #3d3d3d; }
+      body.dark-mode .leaderboard-rank { background: #3d3d3d; color: #aaa; }
+      body.dark-mode .leaderboard-name { color: #e0e0e0; }
+      body.dark-mode .leaderboard-item.top-1 { background: linear-gradient(135deg, #3d3520, #332d1a); border-color: #b8960e; }
+      body.dark-mode .leaderboard-item.top-2 { background: linear-gradient(135deg, #353535, #303030); border-color: #888; }
+      body.dark-mode .leaderboard-item.top-3 { background: linear-gradient(135deg, #3a3025, #332a1f); border-color: #a06828; }
+      body.dark-mode .taxon-badge { background: #2d2d2d; border-color: #444; }
+      body.dark-mode .taxon-badge .taxon-name { color: #e0e0e0; }
+      body.dark-mode .taxon-badge .taxon-bar { background: #444; }
+      body.dark-mode .day-card { background: #2d2d2d; border-color: #444; }
+      body.dark-mode .day-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+      body.dark-mode .day-card.best-day { border-color: #74ac00; }
+      body.dark-mode .day-card .day-name { color: #e0e0e0; }
+      body.dark-mode .day-card .day-date-label { color: #aaa; }
+      body.dark-mode .day-card .day-mini-value { color: #ccc; }
+      body.dark-mode .highlight-card { background: #2d2d2d; border-color: #444; }
+      body.dark-mode .highlight-card h3 { color: #e0e0e0; border-bottom-color: #444; }
+      body.dark-mode .highlight-card h3 .highlight-count { background: rgba(116,172,0,0.2); color: #9acd32; }
+      body.dark-mode .species-list-item:hover { background: #3d3d3d; }
+      body.dark-mode .species-list-item .sli-name { color: #e0e0e0; }
+      body.dark-mode .species-list-item .sli-badge { background: #3d3d3d; color: #aaa; }
+      body.dark-mode .user-list-item:hover { background: #3d3d3d; }
+      body.dark-mode .user-list-item .uli-name { color: #e0e0e0; }
+      body.dark-mode .user-list-item .uli-detail { color: #aaa; }
+      body.dark-mode .scrollable-list::-webkit-scrollbar-thumb { background: #555; }
+      body.dark-mode .scrollable-list::-webkit-scrollbar-thumb:hover { background: #777; }
+      body.dark-mode .highlight-empty { color: #777; }
+      body.dark-mode .sync-status { background: rgba(116,172,0,0.15); border-color: rgba(116,172,0,0.3); color: #9acd32; }
+      body.dark-mode .skeleton-bar { background: #3d3d3d; }
+      body.dark-mode .skeleton-circle { background: #3d3d3d; }
+      body.dark-mode .skeleton-obs-card { background: #2d2d2d; border-color: #3d3d3d; }
+      body.dark-mode .skeleton-obs-img { background: #3d3d3d; }
+    </style>
+  </head>
+  <body>
+    <a href="cnc-projects.html" class="back-button"><span style="font-size:1rem">&#8592;</span> Projects</a>
+
+    <div class="container">
+      <header id="defaultHeader">
+        <h1>CNC Project Stats</h1>
+        <p>City Nature Challenge</p>
+      </header>
+      <header class="project-header" id="projectHeader" style="display:none"></header>
+
+      <div id="projectSelector" style="display:none"></div>
+      <div id="content" style="display:none">
+        <div id="headerSkeleton" class="project-header" style="text-align:center;margin-bottom:30px;padding-top:20px">
+          <div class="project-header-content" style="justify-content:center">
+            <div class="skeleton-bar" style="width:64px;height:64px;border-radius:12px;flex-shrink:0"></div>
+            <div class="skeleton-bar" style="width:320px;height:32px"></div>
+          </div>
+          <div class="skeleton-bar" style="width:80%;height:12px;margin:14px auto 6px"></div>
+          <div class="skeleton-bar" style="width:60%;height:12px;margin:0 auto"></div>
+          <div class="skeleton-bar" style="width:140px;height:12px;margin:14px auto 0"></div>
+          <div style="margin-top:20px">
+            <div class="skeleton-bar" style="width:50%;height:40px;margin:0 auto;border-radius:8px"></div>
+          </div>
+        </div>
+        <div id="syncStatus"></div>
+        <div id="statsBar" class="stats-bar">
+          <div class="stat-card"><div class="skeleton-bar lg"></div><div class="skeleton-bar sm"></div></div>
+          <div class="stat-card"><div class="skeleton-bar lg"></div><div class="skeleton-bar sm"></div></div>
+          <div class="stat-card"><div class="skeleton-bar lg"></div><div class="skeleton-bar sm"></div></div>
+          <div class="stat-card"><div class="skeleton-bar lg"></div><div class="skeleton-bar sm"></div></div>
+          <div class="stat-card"><div class="skeleton-bar lg"></div><div class="skeleton-bar sm"></div></div>
+        </div>
+        <div id="donutsRow" class="donuts-row">
+          <div class="donut-card"><div class="skeleton-bar" style="width:50%;height:16px;margin:0 auto 20px"></div><div class="skeleton-circle" style="width:280px;height:280px;margin:0 auto"></div><div style="margin-top:20px;display:flex;flex-direction:column;gap:10px;align-items:center"><div class="skeleton-bar" style="width:85%;height:12px"></div><div class="skeleton-bar" style="width:75%;height:12px"></div><div class="skeleton-bar" style="width:65%;height:12px"></div><div class="skeleton-bar" style="width:55%;height:12px"></div><div class="skeleton-bar" style="width:45%;height:12px"></div></div></div>
+          <div class="donut-card"><div class="skeleton-bar" style="width:50%;height:16px;margin:0 auto 20px"></div><div class="skeleton-circle" style="width:280px;height:280px;margin:0 auto"></div><div style="margin-top:20px;display:flex;flex-direction:column;gap:10px;align-items:center"><div class="skeleton-bar" style="width:85%;height:12px"></div><div class="skeleton-bar" style="width:75%;height:12px"></div><div class="skeleton-bar" style="width:65%;height:12px"></div><div class="skeleton-bar" style="width:55%;height:12px"></div><div class="skeleton-bar" style="width:45%;height:12px"></div></div></div>
+          <div class="donut-card"><div class="skeleton-bar" style="width:50%;height:16px;margin:0 auto 20px"></div><div class="skeleton-circle" style="width:280px;height:280px;margin:0 auto"></div><div style="margin-top:20px;display:flex;flex-direction:column;gap:10px;align-items:center"><div class="skeleton-bar" style="width:85%;height:12px"></div><div class="skeleton-bar" style="width:75%;height:12px"></div><div class="skeleton-bar" style="width:65%;height:12px"></div><div class="skeleton-bar" style="width:55%;height:12px"></div><div class="skeleton-bar" style="width:45%;height:12px"></div></div></div>
+        </div>
+        <div class="section-title">Daily Breakdown</div>
+        <div id="daysGrid" class="days-grid">
+          <div class="day-card"><div class="skeleton-circle" style="width:36px;height:36px;margin:0 auto 8px"></div><div class="skeleton-bar" style="width:70%;height:14px;margin:0 auto 4px"></div><div class="skeleton-bar" style="width:50%;height:10px;margin:0 auto 12px"></div><div class="skeleton-bar" style="width:60%;height:28px;margin:0 auto 4px"></div><div class="skeleton-bar" style="width:40%;height:10px;margin:0 auto 12px"></div><div style="display:flex;gap:16px;justify-content:center"><div class="skeleton-bar" style="width:40px;height:10px"></div><div class="skeleton-bar" style="width:40px;height:10px"></div></div></div>
+          <div class="day-card"><div class="skeleton-circle" style="width:36px;height:36px;margin:0 auto 8px"></div><div class="skeleton-bar" style="width:70%;height:14px;margin:0 auto 4px"></div><div class="skeleton-bar" style="width:50%;height:10px;margin:0 auto 12px"></div><div class="skeleton-bar" style="width:60%;height:28px;margin:0 auto 4px"></div><div class="skeleton-bar" style="width:40%;height:10px;margin:0 auto 12px"></div><div style="display:flex;gap:16px;justify-content:center"><div class="skeleton-bar" style="width:40px;height:10px"></div><div class="skeleton-bar" style="width:40px;height:10px"></div></div></div>
+          <div class="day-card"><div class="skeleton-circle" style="width:36px;height:36px;margin:0 auto 8px"></div><div class="skeleton-bar" style="width:70%;height:14px;margin:0 auto 4px"></div><div class="skeleton-bar" style="width:50%;height:10px;margin:0 auto 12px"></div><div class="skeleton-bar" style="width:60%;height:28px;margin:0 auto 4px"></div><div class="skeleton-bar" style="width:40%;height:10px;margin:0 auto 12px"></div><div style="display:flex;gap:16px;justify-content:center"><div class="skeleton-bar" style="width:40px;height:10px"></div><div class="skeleton-bar" style="width:40px;height:10px"></div></div></div>
+          <div class="day-card"><div class="skeleton-circle" style="width:36px;height:36px;margin:0 auto 8px"></div><div class="skeleton-bar" style="width:70%;height:14px;margin:0 auto 4px"></div><div class="skeleton-bar" style="width:50%;height:10px;margin:0 auto 12px"></div><div class="skeleton-bar" style="width:60%;height:28px;margin:0 auto 4px"></div><div class="skeleton-bar" style="width:40%;height:10px;margin:0 auto 12px"></div><div style="display:flex;gap:16px;justify-content:center"><div class="skeleton-bar" style="width:40px;height:10px"></div><div class="skeleton-bar" style="width:40px;height:10px"></div></div></div>
+        </div>
+
+        <div class="section-title">Leaderboards</div>
+        <div id="leaderboards" class="leaderboards">
+          <div class="leaderboard-card"><h3><div class="skeleton-bar" style="width:60%;height:14px"></div></h3><div class="skeleton-leaderboard-rows"></div></div>
+          <div class="leaderboard-card"><h3><div class="skeleton-bar" style="width:60%;height:14px"></div></h3><div class="skeleton-leaderboard-rows"></div></div>
+          <div class="leaderboard-card"><h3><div class="skeleton-bar" style="width:60%;height:14px"></div></h3><div class="skeleton-leaderboard-rows"></div></div>
+        </div>
+
+        
+        <div class="section-title">Project Highlights</div>
+        <div id="highlightsContainer">
+          <div class="highlights-grid">
+            <div class="highlight-card"><h3><div class="skeleton-bar" style="width:60%;height:14px"></div></h3><div class="skeleton-bar" style="width:90%;height:10px;margin-bottom:10px"></div><div class="skeleton-bar" style="width:80%;height:10px;margin-bottom:10px"></div><div class="skeleton-bar" style="width:70%;height:10px"></div></div>
+            <div class="highlight-card"><h3><div class="skeleton-bar" style="width:60%;height:14px"></div></h3><div class="skeleton-bar" style="width:90%;height:10px;margin-bottom:10px"></div><div class="skeleton-bar" style="width:80%;height:10px;margin-bottom:10px"></div><div class="skeleton-bar" style="width:70%;height:10px"></div></div>
+          </div>
+        </div>
+
+        <div class="section-title">Recent Observations</div>
+        <div class="recent-obs-grid" id="recentObsGrid">
+          <div class="skeleton-obs-card"><div class="skeleton-obs-img"></div><div class="skeleton-obs-info"><div class="skeleton-bar" style="width:80%;height:10px"></div><div class="skeleton-bar" style="width:50%;height:8px;margin-top:6px"></div></div></div>
+          <div class="skeleton-obs-card"><div class="skeleton-obs-img"></div><div class="skeleton-obs-info"><div class="skeleton-bar" style="width:80%;height:10px"></div><div class="skeleton-bar" style="width:50%;height:8px;margin-top:6px"></div></div></div>
+          <div class="skeleton-obs-card"><div class="skeleton-obs-img"></div><div class="skeleton-obs-info"><div class="skeleton-bar" style="width:80%;height:10px"></div><div class="skeleton-bar" style="width:50%;height:8px;margin-top:6px"></div></div></div>
+          <div class="skeleton-obs-card"><div class="skeleton-obs-img"></div><div class="skeleton-obs-info"><div class="skeleton-bar" style="width:80%;height:10px"></div><div class="skeleton-bar" style="width:50%;height:8px;margin-top:6px"></div></div></div>
+          <div class="skeleton-obs-card"><div class="skeleton-obs-img"></div><div class="skeleton-obs-info"><div class="skeleton-bar" style="width:80%;height:10px"></div><div class="skeleton-bar" style="width:50%;height:8px;margin-top:6px"></div></div></div>
+          <div class="skeleton-obs-card"><div class="skeleton-obs-img"></div><div class="skeleton-obs-info"><div class="skeleton-bar" style="width:80%;height:10px"></div><div class="skeleton-bar" style="width:50%;height:8px;margin-top:6px"></div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <script src="dark-mode.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+      const SUPABASE_URL = "https://kxxcmxlfairnauvunmwj.supabase.co";
+      const SUPABASE_KEY = "sb_publishable_lQU2ybO4fnJAKOrJBF8lrw_NnzJVev7";
+      const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+      const CNC_DAYS = ["2025-04-25", "2025-04-26", "2025-04-27", "2025-04-28"];
+
+      const ICONIC_TAXONS = {
+        Plantae: { emoji: "\u{1F33F}", name: "Plants" },
+        Fungi: { emoji: "\u{1F344}", name: "Fungi" },
+        Chromista: { emoji: "\u{1F7E4}", name: "Chromista" },
+        Protozoa: { emoji: "\u{1F9A0}", name: "Protozoa" },
+        Animalia: { emoji: "\u{1F43E}", name: "Other Animals" },
+        Mollusca: { emoji: "\u{1F40C}", name: "Mollusks" },
+        Arachnida: { emoji: "\u{1F577}\uFE0F", name: "Arachnids" },
+        Insecta: { emoji: "\u{1F98B}", name: "Insects" },
+        Actinopterygii: { emoji: "\u{1F41F}", name: "Fish" },
+        Amphibia: { emoji: "\u{1F438}", name: "Amphibians" },
+        Reptilia: { emoji: "\u{1F98E}", name: "Reptiles" },
+        Aves: { emoji: "\u{1F426}", name: "Birds" },
+        Mammalia: { emoji: "\u{1F98C}", name: "Mammals" },
+      };
+
+      const TAXON_COLORS = {
+        Aves: "#1b9e77", Plantae: "#66a61e", Insecta: "#e6ab02",
+        Fungi: "#7570b3", Mammalia: "#d95f02", Reptilia: "#e7298a",
+        Amphibia: "#a6761d", Arachnida: "#666666", Mollusca: "#377eb8",
+        Actinopterygii: "#4daf4a", Chromista: "#984ea3", Protozoa: "#ff7f00",
+        Animalia: "#a65628", Other: "#999999"
+      };
+
+      const params = new URLSearchParams(window.location.search);
+      const PROJECT_SLUG = params.get("project");
+
+      // ─── Drawing ───
+      function drawDonut(canvas, slices) {
+        const ctx = canvas.getContext("2d");
+        const size = canvas.width;
+        const cx = size / 2, cy = size / 2;
+        const outerR = size / 2 - 4, innerR = outerR * 0.65;
+        const total = slices.reduce((s, sl) => s + sl.value, 0);
+        ctx.clearRect(0, 0, size, size);
+        if (total === 0) return;
+        let angle = -Math.PI / 2;
+        slices.forEach(sl => {
+          const a = (sl.value / total) * Math.PI * 2;
+          ctx.beginPath();
+          ctx.arc(cx, cy, outerR, angle, angle + a);
+          ctx.arc(cx, cy, innerR, angle + a, angle, true);
+          ctx.closePath();
+          ctx.fillStyle = sl.color;
+          ctx.fill();
+          angle += a;
+        });
+      }
+
+      function legendHtml(slices) {
+        const total = slices.reduce((s, sl) => s + sl.value, 0);
+        return slices.map(s =>
+          `<div class="donut-legend-item">
+            <span class="donut-legend-dot" style="background:${s.color}"></span>
+            <span>${s.label}</span>
+            <span class="donut-legend-value">${s.value.toLocaleString()} (${total > 0 ? Math.round(s.value / total * 100) : 0}%)</span>
+          </div>`
+        ).join("");
+      }
+
+      // ─── Project list ───
+      async function showProjectList() {
+        const selector = document.getElementById("projectSelector");
+        selector.style.display = "block";
+
+        const { data, error } = await db
+          .from("cnc_projects")
+          .select("slug, title, icon_url, total_observations")
+          .order("total_observations", { ascending: false });
+
+        if (error || !data || data.length === 0) {
+          const { data: logs } = await db
+            .from("cnc_sync_log")
+            .select("project_slug, total_fetched, status")
+            .eq("status", "done")
+            .order("total_fetched", { ascending: false });
+
+          if (logs && logs.length > 0) {
+            selector.innerHTML = `
+              <h2>Select a synced project</h2>
+              <div class="project-list">
+                ${logs.map(l => `
+                  <a class="project-link" href="?project=${l.project_slug}">
+                    <div class="pl-info">
+                      <div class="pl-title">${l.project_slug}</div>
+                      <div class="pl-count">${(l.total_fetched || 0).toLocaleString()} observations synced</div>
+                    </div>
+                  </a>`).join("")}
+              </div>`;
+          } else {
+            selector.innerHTML = `<h2>No projects found</h2><p>No project data available yet.</p>`;
+          }
+          return;
+        }
+
+        selector.innerHTML = `
+          <h2>Select a CNC project</h2>
+          <div class="project-list">
+            ${data.map(p => `
+              <a class="project-link" href="?project=${p.slug}">
+                ${p.icon_url ? `<img src="${p.icon_url}" alt="" />` : ""}
+                <div class="pl-info">
+                  <div class="pl-title">${p.title || p.slug}</div>
+                  <div class="pl-count">${(p.total_observations || 0).toLocaleString()} observations</div>
+                </div>
+              </a>`).join("")}
+          </div>`;
+      }
+
+      // ─── Fetch project info from iNat API ───
+      async function fetchProjectInfo(slug) {
+        try {
+          const response = await fetch(`https://api.inaturalist.org/v1/projects/${slug}`);
+          if (!response.ok) return null;
+          const data = await response.json();
+          return data.results && data.results[0] ? data.results[0] : null;
+        } catch (e) {
+          console.warn("Could not fetch project info:", e.message);
+          return null;
+        }
+      }
+
+      function renderProjectHeader(project, slug) {
+        const header = document.getElementById("projectHeader");
+        document.getElementById("defaultHeader").style.display = "none";
+        const skeleton = document.getElementById("headerSkeleton");
+        if (skeleton) skeleton.style.display = "none";
+        header.style.display = "block";
+
+        const icon = project ? (project.icon || "logo.png") : "logo.png";
+        const title = project ? project.title : slug;
+        const desc = project && project.description ? project.description.replace(/<[^>]*>/g, "").slice(0, 200) : "";
+        const projectUrl = `https://www.inaturalist.org/projects/${slug}`;
+
+        header.innerHTML = `
+          <div class="project-header-content">
+            <img src="${icon}" alt="" class="project-icon" />
+            <h1>${title}</h1>
+          </div>
+          ${desc ? `<p class="description">${desc}${desc.length >= 200 ? "..." : ""}</p>` : ""}
+          <p style="margin-top:8px"><a href="${projectUrl}" target="_blank">View on iNaturalist \u2192</a></p>
+        `;
+
+        document.title = `CNC: ${title}`;
+      }
+
+      // ─── Load project data from Supabase ───
+      async function loadProject(slug) {
+        // Show skeleton layout immediately
+        document.getElementById("defaultHeader").style.display = "none";
+        document.getElementById("content").style.display = "block";
+
+        // Fetch project info and computed stats in parallel
+        const projectInfoPromise = fetchProjectInfo(slug);
+        const { data: projectData } = await db
+          .from("cnc_projects")
+          .select("computed_stats, computed_at")
+          .eq("slug", slug)
+          .limit(1);
+
+        const projectInfo = await projectInfoPromise;
+        renderProjectHeader(projectInfo, slug);
+
+        const stats = projectData && projectData.length > 0 ? projectData[0].computed_stats : null;
+        const computedAt = projectData && projectData.length > 0 ? projectData[0].computed_at : null;
+
+        if (!stats) {
+          document.getElementById("content").innerHTML = `
+            <div style="text-align:center;padding:40px;color:#999">
+              No data available yet for <strong>${slug}</strong>.<br>
+              Check back soon!
+            </div>`;
+          return;
+        }
+
+        if (computedAt) {
+          const syncDate = new Date(computedAt).toLocaleString();
+          document.getElementById("syncStatus").innerHTML = `
+            <div class="sync-status">
+              ${stats.summary.total_observations.toLocaleString()} observations &mdash; last updated: ${syncDate}
+            </div>`;
+        }
+
+        renderStats(stats);
+        renderRecentObservations(stats);
+        renderLeaderboards(stats);
+        renderDailyBreakdown(stats);
+        renderHighlights(stats);
+      }
+
+      // ─── Recent Observations ───
+      function renderRecentObservations(stats) {
+        const recent = stats.recent_observations || [];
+
+        document.getElementById("recentObsGrid").innerHTML = recent.map(o => {
+          const photo = o.photo_url ? o.photo_url.replace("square", "medium") : "";
+          const name = o.common_name || o.taxon_name || "Unknown";
+          const sciName = o.taxon_name || "";
+          const isRG = o.quality_grade === "research";
+          const url = `https://www.inaturalist.org/observations/${o.inat_id}`;
+          const date = o.observed_on ? new Date(o.observed_on + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "";
+
+          return `
+            <a class="recent-obs-card" href="${url}" target="_blank">
+              <div class="recent-obs-img-wrap">
+                ${photo ? `<img src="${photo}" alt="${name}" loading="lazy" />` : ""}
+                ${isRG ? `<span class="recent-obs-rg">RG</span>` : ""}
+                ${o.user_icon ? `<img src="${o.user_icon}" class="recent-obs-avatar" alt="${o.user_login}" />` : ""}
+              </div>
+              <div class="recent-obs-info">
+                <div class="obs-sci">${name}</div>
+                ${sciName && sciName !== name ? `<div class="obs-common">${sciName}</div>` : ""}
+                <div class="obs-meta"><span>${o.user_login || ""}</span><span>${date}</span></div>
+              </div>
+            </a>`;
+        }).join("");
+      }
+
+      // ─── Render stats ───
+      function renderStats(stats) {
+        const s = stats.summary;
+
+        const baseUrl = `https://www.inaturalist.org/observations?project_id=${PROJECT_SLUG}&verifiable=any`;
+        document.getElementById("statsBar").innerHTML = `
+          <a class="stat-card" href="${baseUrl}" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${s.total_observations.toLocaleString()}</div><div class="stat-label">📷 Observations</div></a>
+          <a class="stat-card" href="${baseUrl}&view=species" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${s.total_species.toLocaleString()}</div><div class="stat-label">🌿 Species</div></a>
+          <div class="stat-card"><div class="stat-value">${s.total_observations > 0 ? Math.round((s.total_species / s.total_observations) * 100) : 0}%</div><div class="stat-label">🧬 Species/Obs Ratio</div></div>
+          <a class="stat-card" href="${baseUrl}&view=observers" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${s.total_observers.toLocaleString()}</div><div class="stat-label">👥 Observers</div></a>
+          <div class="stat-card"><div class="stat-value">${((stats.identifications || {}).total_identifiers || 0).toLocaleString()}</div><div class="stat-label">🔬 Identifiers</div></div>
+        `;
+
+        const obsSlices = [
+          { value: s.research_grade, color: "#74ac00", label: "Research Grade" },
+          { value: s.needs_id, color: "#e8d44d", label: "Needs ID" },
+          { value: s.casual, color: "#b0b0b0", label: "Casual" },
+        ].filter(sl => sl.value > 0);
+
+        const speciesSlices = Object.entries(stats.species_by_iconic_taxon)
+          .map(([key, count]) => ({ value: count, color: TAXON_COLORS[key] || "#999", label: ICONIC_TAXONS[key] ? ICONIC_TAXONS[key].name : key }))
+          .sort((a, b) => b.value - a.value)
+          .filter(sl => sl.value > 0);
+
+        const idData = stats.identifications || {};
+        const idSlices = [
+          { value: idData.improving || 0, color: "#4a7c10", label: "Improving" },
+          { value: idData.supporting || 0, color: "#74ac00", label: "Supporting" },
+          { value: idData.leading || 0, color: "#c8d44d", label: "Leading" },
+          { value: idData.maverick || 0, color: "#c0392b", label: "Maverick" },
+        ].filter(sl => sl.value > 0);
+
+        document.getElementById("donutsRow").innerHTML = `
+          <div class="donut-card">
+            <div class="donut-card-title">Observations</div>
+            <div class="donut-container"><canvas id="dc1" width="320" height="320"></canvas>
+              <div class="donut-center"><div class="donut-value">${s.total_observations.toLocaleString()}</div><div class="donut-label">Total</div></div>
+            </div>
+            <div class="donut-legend">${legendHtml(obsSlices)}</div>
+          </div>
+          <div class="donut-card">
+            <div class="donut-card-title">Species</div>
+            <div class="donut-container"><canvas id="dc2" width="320" height="320"></canvas>
+              <div class="donut-center"><div class="donut-value">${s.total_species.toLocaleString()}</div><div class="donut-label">Total</div></div>
+            </div>
+            <div class="donut-legend">${legendHtml(speciesSlices)}</div>
+          </div>
+          <div class="donut-card">
+            <div class="donut-card-title">Identifications</div>
+            <div class="donut-container"><canvas id="dc3" width="320" height="320"></canvas>
+              <div class="donut-center"><div class="donut-value">${(idData.total || 0).toLocaleString()}</div><div class="donut-label">Identifications</div></div>
+            </div>
+            <div class="donut-legend">${legendHtml(idSlices)}</div>
+          </div>`;
+
+        drawDonut(document.getElementById("dc1"), obsSlices);
+        drawDonut(document.getElementById("dc2"), speciesSlices);
+        drawDonut(document.getElementById("dc3"), idSlices);
+      }
+
+      // ─── Leaderboards ───
+      function renderLeaderboards(stats) {
+        const topObs = stats.top_observers || [];
+        const topSp = stats.top_species_users || [];
+        const topSpecies = stats.top_observed_species || [];
+
+        function rankClass(i) { return i === 0 ? "gold" : i === 1 ? "silver" : i === 2 ? "bronze" : ""; }
+        function topClass(i) { return i < 3 ? `top-${i + 1}` : ""; }
+
+        function userItem(item, i) {
+          const url = `https://www.inaturalist.org/observations?project_id=${PROJECT_SLUG}&user_id=${item.login}&verifiable=any`;
+          return `<a class="leaderboard-item ${topClass(i)}" href="${url}" target="_blank">
+            <span class="leaderboard-rank ${rankClass(i)}">${i + 1}</span>
+            ${item.icon ? `<img src="${item.icon}" class="leaderboard-avatar" alt="" />` : `<span class="leaderboard-avatar"></span>`}
+            <span class="leaderboard-name">${item.login}</span>
+            <span class="leaderboard-count">${item.count}</span>
+          </a>`;
+        }
+
+        document.getElementById("leaderboards").innerHTML = `
+          <div class="leaderboard-card"><h3>\u{1F52D} Most Observations</h3>${topObs.map(userItem).join("")}</div>
+          <div class="leaderboard-card"><h3>\u{1F331} Most Species</h3>${topSp.map((item, i) => {
+            const url = `https://www.inaturalist.org/observations?project_id=${PROJECT_SLUG}&user_id=${item.login}&view=species&verifiable=any`;
+            return `<a class="leaderboard-item ${topClass(i)}" href="${url}" target="_blank">
+              <span class="leaderboard-count">${item.count}</span>
+              ${item.icon ? `<img src="${item.icon}" class="leaderboard-avatar" alt="" />` : `<span class="leaderboard-avatar"></span>`}
+              <span class="leaderboard-name">${item.login}</span>
+            </a>`;
+          }).join("")}</div>
+          <div class="leaderboard-card"><h3>\u{1F3C5} Most Observed Species</h3>${topSpecies.map((s, i) => {
+            const taxonUrl = s.taxon_id ? `https://www.inaturalist.org/taxa/${s.taxon_id}` : "#";
+            return `<a class="leaderboard-item ${topClass(i)}" href="${taxonUrl}" target="_blank" style="text-decoration:none;color:inherit">
+              <span class="leaderboard-rank ${rankClass(i)}">${i + 1}</span>
+              ${s.photo ? `<img src="${s.photo}" class="leaderboard-species-photo" alt="" />` : `<span class="leaderboard-species-photo"></span>`}
+              <span class="leaderboard-name">${s.name}${s.sci && s.sci !== s.name ? `<span class="sci-name">${s.sci}</span>` : ""}</span>
+              <span class="leaderboard-count">${s.count}</span>
+            </a>`;
+          }).join("")}</div>`;
+      }
+
+      // ─── Taxonomy ───
+      function renderTaxonomy(stats) {
+        const taxStats = stats.taxonomy_stats || {};
+        const maxSp = Math.max(...Object.values(taxStats).map(s => s.species), 1);
+        const sorted = Object.entries(taxStats).sort((a, b) => b[1].species - a[1].species);
+
+        document.getElementById("taxonomyGrid").innerHTML = sorted.map(([key, s]) => {
+          const info = ICONIC_TAXONS[key] || { emoji: "\u2753", name: key };
+          const pct = Math.round(s.species / maxSp * 100);
+          const taxonUrl = `https://www.inaturalist.org/observations?project_id=${PROJECT_SLUG}&iconic_taxa=${key}&view=species&verifiable=any`;
+          return `<a class="taxon-badge" href="${taxonUrl}" target="_blank" style="text-decoration:none;color:inherit">
+            <div class="taxon-emoji">${info.emoji}</div>
+            <div class="taxon-name">${info.name}</div>
+            <div class="taxon-counts">${s.species} species \u00B7 ${s.obs} obs</div>
+            <div class="taxon-bar"><div class="taxon-bar-fill" style="width:${pct}%"></div></div>
+          </a>`;
+        }).join("");
+      }
+
+      // ─── Daily breakdown ───
+      function renderDailyBreakdown(stats) {
+        const dayStats = stats.daily_stats || {};
+        const newSpeciesPerDay = stats.new_species_per_day || {};
+        const days = Object.keys(dayStats).sort();
+        const dayEmojis = ["🌿", "🔥", "🦋", "🌍"];
+
+        let bestDayIdx = 0, bestObs = 0;
+        days.forEach((d, i) => {
+          if (dayStats[d].obs > bestObs) { bestObs = dayStats[d].obs; bestDayIdx = i; }
+        });
+
+        let html = "";
+        days.forEach((d, i) => {
+          const s = dayStats[d];
+          const newSpecies = newSpeciesPerDay[d] || 0;
+          const dayName = new Date(d + "T12:00:00").toLocaleDateString("en-US", { weekday: "long" });
+          const dateLabel = new Date(d + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" });
+          const isBest = i === bestDayIdx && bestObs > 0;
+          html += `
+            <div class="day-card${isBest ? ' best-day' : ''}">
+              <div class="day-emoji">${dayEmojis[i % dayEmojis.length]}</div>
+              <div class="day-name">${dayName}</div>
+              <div class="day-date-label">${dateLabel}</div>
+              <div class="day-obs-big">${s.obs.toLocaleString()}</div>
+              <div class="day-obs-label">Observations</div>
+              <div class="day-mini-stats">
+                <div class="day-mini-stat">
+                  <div class="day-mini-value">${s.species.toLocaleString()}</div>
+                  <div class="day-mini-label">Species</div>
+                </div>
+                <div class="day-mini-stat">
+                  <div class="day-mini-value">${newSpecies.toLocaleString()}</div>
+                  <div class="day-mini-label">New Species</div>
+                </div>
+                <div class="day-mini-stat">
+                  <div class="day-mini-value">${s.observers.toLocaleString()}</div>
+                  <div class="day-mini-label">Observers</div>
+                </div>
+              </div>
+            </div>`;
+        });
+        document.getElementById("daysGrid").innerHTML = html;
+      }
+
+      // ─── Highlights ───
+      function renderHighlights(stats) {
+        const communityFavorites = stats.community_favorites || [];
+        const qualityUsers = stats.quality_champions || [];
+        const allDaysUsers = stats.all_days_heroes || [];
+        const diversityUsers = stats.biodiversity_explorers || [];
+        const mostFaved = stats.most_faved || [];
+
+        // === Render helpers ===
+        function speciesItemHtml(s, badge) {
+          const name = s.common_name || s.taxon_name || "Unknown";
+          const sci = s.taxon_name || "";
+          const photo = s.photo_url || "";
+          const taxonUrl = s.taxon_id ? `https://www.inaturalist.org/taxa/${s.taxon_id}` : "#";
+          return `
+            <a class="species-list-item" href="${taxonUrl}" target="_blank">
+              ${photo ? `<img src="${photo}" alt="" />` : `<span style="width:40px;height:40px;border-radius:8px;background:#e8e8e8;display:inline-block;flex-shrink:0"></span>`}
+              <div class="sli-info">
+                <div class="sli-name">${name}</div>
+                ${sci && sci !== name ? `<div class="sli-sci">${sci}</div>` : ""}
+              </div>
+              ${badge ? `<span class="sli-badge">${badge}</span>` : ""}
+            </a>`;
+        }
+
+        function userListHtml(items, detailFn) {
+          return items.map(u => {
+            const url = `https://www.inaturalist.org/observations?project_id=${PROJECT_SLUG}&user_id=${u.login}&verifiable=any`;
+            return `
+              <a class="user-list-item" href="${url}" target="_blank">
+                ${u.avatar ? `<img src="${u.avatar}" alt="" />` : `<span style="width:36px;height:36px;border-radius:50%;background:#e8e8e8;display:inline-block;flex-shrink:0"></span>`}
+                <span class="uli-name">${u.login}</span>
+                <span class="uli-detail">${detailFn(u)}</span>
+              </a>`;
+          }).join("");
+        }
+
+        // === Build HTML ===
+        let html = "";
+
+        // Row 0: One-Hit Wonders + First Observations
+        const oneHitWonders = stats.one_hit_wonders || [];
+        const oneHitWondersTotal = stats.one_hit_wonders_total || oneHitWonders.length;
+        const firstObservations = stats.first_observations || [];
+
+        html += `<div class="highlights-grid">`;
+        html += `<div class="highlight-card">
+          <h3>\u{1F984} One-Hit Wonders <span class="highlight-count">${oneHitWondersTotal} species</span></h3>
+          <p style="font-size:0.85rem;color:#888;margin-bottom:12px">Species observed only once — the rarest local finds</p>
+          ${oneHitWonders.length > 0
+            ? `<div class="scrollable-list">${oneHitWonders.map(s => {
+                const dateLabel = s.observed_on ? new Date(s.observed_on + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "";
+                return speciesItemHtml(s, `${s.observer}${dateLabel ? " \u00B7 " + dateLabel : ""}`);
+              }).join("")}</div>`
+            : `<div class="highlight-empty">No one-hit wonders found</div>`}
+        </div>`;
+        html += `<div class="highlight-card">
+          <h3>\u{2B50} First Observations <span class="highlight-count">${firstObservations.length} species</span></h3>
+          <p style="font-size:0.85rem;color:#888;margin-bottom:12px">Species first observed globally or locally during this event</p>
+          ${firstObservations.length > 0
+            ? `<div class="scrollable-list">${firstObservations.map(s => {
+                const name = s.common_name || s.taxon_name || "Unknown";
+                const sci = s.taxon_name || "";
+                const photo = s.photo_url || "";
+                const taxonUrl = s.taxon_id ? "https://www.inaturalist.org/observations?project_id=" + PROJECT_SLUG + "&taxon_id=" + s.taxon_id + "&verifiable=any" : "#";
+                return '<a class="species-list-item" href="' + taxonUrl + '" target="_blank">'
+                  + (photo ? '<img src="' + photo + '" alt="" />' : '<span style="width:40px;height:40px;border-radius:8px;background:#e8e8e8;display:inline-block;flex-shrink:0"></span>')
+                  + '<div class="sli-info">'
+                  + '<div class="sli-name">' + name + '</div>'
+                  + (sci && sci !== name ? '<div class="sli-sci">' + sci + '</div>' : '')
+                  + '</div>'
+                  + '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'
+                  + (s.first_global_obs ? '<span style="background:linear-gradient(135deg,#FFD700,#FFA000);color:#333;font-size:0.7rem;font-weight:700;padding:3px 8px;border-radius:10px;white-space:nowrap;box-shadow:0 1px 3px rgba(255,160,0,0.3)">\u2B50 1st global</span>' : '')
+                  + (s.first_local_obs ? '<span style="background:linear-gradient(135deg,#4CAF50,#2E7D32);color:#fff;font-size:0.7rem;font-weight:700;padding:3px 8px;border-radius:10px;white-space:nowrap;box-shadow:0 1px 3px rgba(46,125,50,0.3)">\u{1F4CD} 1st local</span>' : '')
+                  + '<span class="sli-badge">' + (s.global_obs_count || 0) + ' global' + (s.local_obs_count != null ? ' \u00B7 ' + s.local_obs_count + ' local' : '') + '</span>'
+                  + '</div></a>';
+              }).join("")}</div>`
+            : `<div class="highlight-empty">No first observations found</div>`}
+        </div>`;
+        html += `</div>`;
+
+        // Row 1: Endangered Species + Community Favorites
+        const endangered = stats.endangered_species || { total: 0, species: [] };
+        const iucnColors = { CR: "#d32f2f", EN: "#e65100", VU: "#f9a825", NT: "#1976d2" };
+        const categorySummary = ["CR", "EN", "VU", "NT"]
+          .map(k => {
+            const count = endangered[{CR:"critically_endangered",EN:"endangered",VU:"vulnerable",NT:"near_threatened"}[k]] || 0;
+            return count > 0 ? `<span style="color:${iucnColors[k]};font-weight:700">${count} ${k}</span>` : null;
+          }).filter(Boolean).join(" · ");
+        html += `<div class="highlights-grid">`;
+        html += `<div class="highlight-card">
+          <h3>\u{1F6A8} Endangered Species <span class="highlight-count">${endangered.total} species</span></h3>
+          <p style="font-size:0.85rem;color:#888;margin-bottom:8px">Species with IUCN conservation status observed in this project</p>
+          ${categorySummary ? `<p style="font-size:0.9rem;margin-bottom:12px">${categorySummary}</p>` : ""}
+          ${endangered.species && endangered.species.length > 0
+            ? `<div class="scrollable-list">${endangered.species.map(s => {
+                const name = s.common_name || s.taxon_name || "Unknown";
+                const sci = s.taxon_name || "";
+                const photo = s.photo_url || "";
+                const color = iucnColors[s.status] || "#666";
+                const taxonUrl = s.taxon_id ? "https://www.inaturalist.org/observations?project_id=" + PROJECT_SLUG + "&taxon_id=" + s.taxon_id + "&verifiable=any" : "#";
+                return '<a class="species-list-item" href="' + taxonUrl + '" target="_blank">'
+                  + (photo ? '<img src="' + photo + '" alt="" />' : '<span style="width:40px;height:40px;border-radius:8px;background:#e8e8e8;display:inline-block;flex-shrink:0"></span>')
+                  + '<div class="sli-info">'
+                  + '<div class="sli-name">' + name + '</div>'
+                  + (sci && sci !== name ? '<div class="sli-sci">' + sci + '</div>' : '')
+                  + '</div>'
+                  + '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'
+                  + '<span style="background:' + color + ';color:#fff;font-size:0.7rem;font-weight:700;padding:3px 8px;border-radius:10px;white-space:nowrap">' + s.status + '</span>'
+                  + '<span class="sli-badge">' + s.project_obs_count + ' obs</span>'
+                  + '</div></a>';
+              }).join("")}</div>`
+            : `<div class="highlight-empty">No endangered species data available</div>`}
+        </div>`;
+        html += `<div class="highlight-card">
+          <h3>\u{1F31F} Community Favorites <span class="highlight-count">Top 10</span></h3>
+          <p style="font-size:0.85rem;color:#888;margin-bottom:12px">Species observed by the most different people</p>
+          ${communityFavorites.map(s => speciesItemHtml(s, `${s.observers_count} observers \u00B7 ${s.obs_count} obs`)).join("")}
+        </div>`;
+        html += `</div>`;
+
+        // Row 3: Most Faved + Quality Champions
+        html += `<div class="highlights-grid">`;
+        html += `<div class="highlight-card">
+          <h3>\u2764\uFE0F Most Popular Observations <span class="highlight-count">Top 10</span></h3>
+          <p style="font-size:0.85rem;color:#888;margin-bottom:12px">Observations with the most favorites and comments</p>`;
+        if (mostFaved.length > 0) {
+          mostFaved.forEach(o => {
+            const name = o.common_name || o.taxon_name || "Unknown";
+            const photo = o.photo_url || "";
+            const url = `https://www.inaturalist.org/observations/${o.inat_id}`;
+            const faves = o.faves_count || 0;
+            const comments = o.comments_count || 0;
+            html += `
+              <a class="species-list-item" href="${url}" target="_blank">
+                ${photo ? `<img src="${photo}" alt="" />` : `<span style="width:40px;height:40px;border-radius:8px;background:#e8e8e8;display:inline-block;flex-shrink:0"></span>`}
+                <div class="sli-info">
+                  <div class="sli-name">${name}</div>
+                  <div class="sli-meta">by ${o.user_login || "?"}</div>
+                </div>
+                <span class="sli-badge">\u2764\uFE0F ${faves} \u00B7 \u{1F4AC} ${comments}</span>
+              </a>`;
+          });
+        } else {
+          html += `<div class="highlight-empty">No popular observations</div>`;
+        }
+        html += `</div>`;
+        html += `<div class="highlight-card">
+          <h3>\u2B50 Quality Champions <span class="highlight-count">Top 10</span></h3>
+          <p style="font-size:0.85rem;color:#888;margin-bottom:12px">Highest research grade percentage (min 10 observations)</p>
+          ${qualityUsers.length > 0 ? userListHtml(qualityUsers, u => `${u.rg_pct}% RG (${u.rg_count}/${u.obs_count})`) : `<div class="highlight-empty">No users with 10+ observations yet</div>`}
+        </div>`;
+        html += `</div>`;
+
+        // Row 4: All Days Heroes + Biodiversity Explorers
+        html += `<div class="highlights-grid">`;
+        html += `<div class="highlight-card">
+          <h3>\u{1F4C5} All Days Heroes <span class="highlight-count">${allDaysUsers.length} users</span></h3>
+          <p style="font-size:0.85rem;color:#888;margin-bottom:12px">Observed on all 4 CNC days</p>
+          ${allDaysUsers.length > 0 ? `<div class="scrollable-list">${userListHtml(allDaysUsers, u => `${u.obs_count} total obs`)}</div>` : `<div class="highlight-empty">No one observed on all 4 days</div>`}
+        </div>`;
+
+        html += `<div class="highlight-card">
+          <h3>\u{1F30D} Biodiversity Explorers <span class="highlight-count">Top 10</span></h3>
+          <p style="font-size:0.85rem;color:#888;margin-bottom:12px">Most iconic taxons observed</p>
+          ${userListHtml(diversityUsers, u => `${u.iconic_count} taxons \u00B7 ${u.species_count} species`)}
+        </div>`;
+        html += `</div>`;
+
+        document.getElementById("highlightsContainer").innerHTML = html;
+      }
+
+      // ─── Init ───
+      if (PROJECT_SLUG) {
+        loadProject(PROJECT_SLUG);
+      } else {
+        showProjectList();
+      }
+    </script>
+  </body>
+</html>

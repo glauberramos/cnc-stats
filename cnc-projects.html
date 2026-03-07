@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CNC 2025 Projects</title>
+    <link rel="icon" href="favicon.ico" />
+    <link rel="stylesheet" href="dark-mode.css" />
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        line-height: 1.6; background: #f8f9fa; min-height: 100vh; color: #333; padding: 40px 20px;
+      }
+      .container { max-width: 800px; width: 100%; margin: 0 auto; }
+      header { text-align: center; margin-bottom: 30px; }
+      header h1 { font-size: 2rem; color: #2c3e50; margin-bottom: 8px; }
+      header p { color: #666; font-size: 1rem; }
+      .project-list { display: flex; flex-direction: column; gap: 12px; }
+      .project-link {
+        display: flex; align-items: center; gap: 16px; padding: 16px 20px;
+        background: white; border-radius: 12px; text-decoration: none; color: inherit;
+        border: 1px solid #e8e8e8; box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+        transition: all 0.2s;
+      }
+      .project-link:hover { border-color: #74ac00; background: #f0f8e0; transform: translateY(-1px); }
+      .project-link img { width: 48px; height: 48px; border-radius: 10px; object-fit: cover; }
+      .project-link .pl-info { flex: 1; min-width: 0; }
+      .project-link .pl-title { font-size: 1rem; font-weight: 600; color: #2c3e50; }
+      .project-link .pl-slug { font-size: 0.8rem; color: #888; }
+      .project-link .pl-stats { font-size: 0.85rem; color: #74ac00; font-weight: 600; white-space: nowrap; }
+      .loading { text-align: center; padding: 40px; color: #888; }
+      .load-more-btn {
+        display: block; width: 100%; padding: 14px; margin-top: 12px;
+        background: white; border: 1px solid #e8e8e8; border-radius: 12px;
+        font-size: 0.95rem; font-weight: 600; color: #74ac00; cursor: pointer;
+        transition: all 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+      }
+      .load-more-btn:hover { background: #f0f8e0; border-color: #74ac00; }
+      .load-more-btn .spinner-sm {
+        display: inline-block; width: 16px; height: 16px; vertical-align: middle;
+        border: 2px solid #e0e0e0; border-top-color: #74ac00;
+        border-radius: 50%; animation: pulse-spin 0.8s linear infinite;
+      }
+      @keyframes pulse-spin { to { transform: rotate(360deg); } }
+      body.dark-mode .load-more-btn { background: #2d2d2d; border-color: #444; color: #9acd32; }
+      body.dark-mode .load-more-btn:hover { background: #2a3a1a; border-color: #74ac00; }
+      .skeleton-bar {
+        height: 14px; background: #e8e8e8; border-radius: 4px; animation: pulse 1.5s ease-in-out infinite;
+      }
+      .skeleton-item {
+        display: flex; align-items: center; gap: 16px; padding: 16px 20px;
+        background: white; border-radius: 12px;
+        border: 1px solid #e8e8e8; box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+      }
+      .skeleton-icon {
+        width: 48px; height: 48px; border-radius: 10px; background: #e8e8e8;
+        animation: pulse 1.5s ease-in-out infinite; flex-shrink: 0;
+      }
+      .skeleton-info { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+      @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+      /* Dark mode */
+      body.dark-mode { background: #1a1a1a; color: #e0e0e0; }
+      body.dark-mode header h1 { color: #e0e0e0; }
+      body.dark-mode header p { color: #999; }
+      body.dark-mode .project-link { background: #2d2d2d; border-color: #444; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+      body.dark-mode .project-link:hover { border-color: #74ac00; background: #2a3a1a; }
+      body.dark-mode .project-link .pl-title { color: #e0e0e0; }
+      body.dark-mode .project-link .pl-slug { color: #888; }
+      body.dark-mode .skeleton-item { background: #2d2d2d; border-color: #444; }
+      body.dark-mode .skeleton-icon { background: #3d3d3d; }
+      body.dark-mode .skeleton-bar { background: #3d3d3d; }
+      .search-box {
+        width: 100%; padding: 12px 16px; font-size: 1rem; border: 1px solid #e8e8e8;
+        border-radius: 10px; background: white; color: #333; margin-bottom: 20px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.06); outline: none; transition: border-color 0.2s;
+      }
+      .search-box:focus { border-color: #74ac00; }
+      .search-box::placeholder { color: #aaa; }
+      body.dark-mode .search-box { background: #2d2d2d; border-color: #444; color: #e0e0e0; }
+      body.dark-mode .search-box::placeholder { color: #666; }
+      body.dark-mode .search-box:focus { border-color: #74ac00; }
+      .no-results { text-align: center; padding: 30px; color: #888; font-size: 0.95rem; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>City Nature Challenge 2025</h1>
+        <p id="subtitle">Participating cities</p>
+      </header>
+      <input type="text" id="searchBox" class="search-box" placeholder="Search cities..." oninput="onSearch(this.value)" />
+      <div id="projectList" class="project-list">
+        <div class="skeleton-item"><div class="skeleton-icon"></div><div class="skeleton-info"><div class="skeleton-bar" style="width:60%;height:14px"></div><div class="skeleton-bar" style="width:40%;height:10px"></div></div><div class="skeleton-bar" style="width:60px;height:14px"></div></div>
+        <div class="skeleton-item"><div class="skeleton-icon"></div><div class="skeleton-info"><div class="skeleton-bar" style="width:70%;height:14px"></div><div class="skeleton-bar" style="width:35%;height:10px"></div></div><div class="skeleton-bar" style="width:60px;height:14px"></div></div>
+        <div class="skeleton-item"><div class="skeleton-icon"></div><div class="skeleton-info"><div class="skeleton-bar" style="width:50%;height:14px"></div><div class="skeleton-bar" style="width:45%;height:10px"></div></div><div class="skeleton-bar" style="width:60px;height:14px"></div></div>
+        <div class="skeleton-item"><div class="skeleton-icon"></div><div class="skeleton-info"><div class="skeleton-bar" style="width:65%;height:14px"></div><div class="skeleton-bar" style="width:38%;height:10px"></div></div><div class="skeleton-bar" style="width:60px;height:14px"></div></div>
+        <div class="skeleton-item"><div class="skeleton-icon"></div><div class="skeleton-info"><div class="skeleton-bar" style="width:55%;height:14px"></div><div class="skeleton-bar" style="width:42%;height:10px"></div></div><div class="skeleton-bar" style="width:60px;height:14px"></div></div>
+        <div class="skeleton-item"><div class="skeleton-icon"></div><div class="skeleton-info"><div class="skeleton-bar" style="width:58%;height:14px"></div><div class="skeleton-bar" style="width:36%;height:10px"></div></div><div class="skeleton-bar" style="width:60px;height:14px"></div></div>
+        <div class="skeleton-item"><div class="skeleton-icon"></div><div class="skeleton-info"><div class="skeleton-bar" style="width:63%;height:14px"></div><div class="skeleton-bar" style="width:41%;height:10px"></div></div><div class="skeleton-bar" style="width:60px;height:14px"></div></div>
+      </div>
+    </div>
+
+    <script src="dark-mode.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+      const SUPABASE_URL = "https://kxxcmxlfairnauvunmwj.supabase.co";
+      const SUPABASE_KEY = "sb_publishable_lQU2ybO4fnJAKOrJBF8lrw_NnzJVev7";
+      const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+      const PAGE_SIZE = 100;
+      let loaded = 0;
+      let totalCount = 0;
+      let searchQuery = "";
+      let searchTimeout = null;
+
+      function renderProjectHtml(p) {
+        const icon = p.icon_url || "logo.png";
+        const title = p.title || p.slug;
+        const obsCount = p.computed_stats?.summary?.total_observations ?? 0;
+        const obs = obsCount.toLocaleString() + " obs";
+        return `
+          <a class="project-link" href="cnc-supabase-test.html?project=${p.slug}">
+            <img src="${icon}" alt="" />
+            <div class="pl-info">
+              <div class="pl-title">${title}</div>
+              <div class="pl-slug">${p.slug}</div>
+            </div>
+            <span class="pl-stats">${obs}</span>
+          </a>`;
+      }
+
+      async function loadPage() {
+        const btn = document.getElementById("loadMoreBtn");
+        if (btn) btn.innerHTML = '<span class="spinner-sm"></span> Loading...';
+
+        let query = db
+          .from("cnc_projects")
+          .select("slug, title, icon_url, computed_stats", { count: "exact" })
+          .order("total_observations", { ascending: false });
+
+        if (searchQuery) {
+          query = query.ilike("title", `%${searchQuery}%`);
+        }
+
+        const { data, error, count } = await query.range(loaded, loaded + PAGE_SIZE - 1);
+
+        if (error || !data || data.length === 0) {
+          if (loaded === 0) {
+            document.getElementById("projectList").innerHTML =
+              searchQuery
+                ? `<div class="no-results">No cities found for "${searchQuery}"</div>`
+                : '<div class="loading">No projects found.</div>';
+          }
+          const btn = document.getElementById("loadMoreBtn");
+          if (btn) btn.remove();
+          return;
+        }
+
+        if (loaded === 0) {
+          totalCount = count || data.length;
+          document.getElementById("subtitle").textContent = `${totalCount} participating cities`;
+          document.getElementById("projectList").innerHTML = "";
+        }
+
+        const list = document.getElementById("projectList");
+        list.insertAdjacentHTML("beforeend", data.map(renderProjectHtml).join(""));
+        loaded += data.length;
+
+        if (loaded < totalCount) {
+          if (!document.getElementById("loadMoreBtn")) {
+            list.insertAdjacentHTML("afterend",
+              `<button id="loadMoreBtn" class="load-more-btn" onclick="loadPage()">Load more (${totalCount - loaded} remaining)</button>`);
+          } else {
+            document.getElementById("loadMoreBtn").textContent = `Load more (${totalCount - loaded} remaining)`;
+          }
+        } else {
+          const btn = document.getElementById("loadMoreBtn");
+          if (btn) btn.remove();
+        }
+      }
+
+      function onSearch(value) {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+          searchQuery = value.trim();
+          loaded = 0;
+          const btn = document.getElementById("loadMoreBtn");
+          if (btn) btn.remove();
+          document.getElementById("projectList").innerHTML = searchQuery
+            ? '<div class="no-results"><span class="spinner-sm" style="display:inline-block;margin-right:8px;vertical-align:middle"></span> Searching...</div>'
+            : '';
+          loadPage();
+        }, 300);
+      }
+
+      loadPage();
+    </script>
+  </body>
+</html>

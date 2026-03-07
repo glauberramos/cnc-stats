@@ -1,0 +1,6 @@
+.DS_Store
+node_modules/
+.env
+scripts/node_modules/
+scripts/.env.example
+scripts/.env
