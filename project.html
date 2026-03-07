@@ -861,12 +861,8 @@
         const topIdentifiers = (stats.identifications || {}).top_identifiers || [];
         const firstObservations = stats.first_observations || [];
         const endangered = stats.endangered_species || { total: 0, species: [] };
+        const localEndangered = stats.locally_endangered_species || { total: 0, species: [] };
         const iucnColors = { CR: "#d32f2f", EN: "#e65100", VU: "#f9a825", NT: "#1976d2" };
-        const categorySummary = ["CR", "EN", "VU", "NT"]
-          .map(k => {
-            const count = endangered[{CR:"critically_endangered",EN:"endangered",VU:"vulnerable",NT:"near_threatened"}[k]] || 0;
-            return count > 0 ? `<span style="color:${iucnColors[k]};font-weight:700">${count} ${k}</span>` : null;
-          }).filter(Boolean).join(" · ");
         const topFavorited = [...mostFaved].sort((a, b) => (b.faves_count || 0) - (a.faves_count || 0)).slice(0, 10);
         const topCommented = [...mostFaved].sort((a, b) => (b.comments_count || 0) - (a.comments_count || 0)).slice(0, 10);
 
@@ -919,32 +915,44 @@
         </div>`;
         html += `</div>`;
 
-        // Row 2: Endangered Species + Endemic Species
+        function endangeredItemHtml(s) {
+          const name = s.common_name || s.taxon_name || "Unknown";
+          const sci = s.taxon_name || "";
+          const photo = s.photo_url || "";
+          const color = iucnColors[s.status] || "#666";
+          const taxonUrl = s.taxon_id ? "https://www.inaturalist.org/observations?project_id=" + PROJECT_SLUG + "&taxon_id=" + s.taxon_id + "&verifiable=any" : "#";
+          return '<a class="species-list-item" href="' + taxonUrl + '" target="_blank">'
+            + (photo ? '<img src="' + photo + '" alt="" />' : '<span style="width:40px;height:40px;border-radius:8px;background:#e8e8e8;display:inline-block;flex-shrink:0"></span>')
+            + '<div class="sli-info">'
+            + '<div class="sli-name">' + name + '</div>'
+            + (sci && sci !== name ? '<div class="sli-sci">' + sci + '</div>' : '')
+            + '</div>'
+            + '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'
+            + '<span style="background:' + color + ';color:#fff;font-size:0.7rem;font-weight:700;padding:3px 8px;border-radius:10px;white-space:nowrap">' + s.status + '</span>'
+            + '<span class="sli-badge">' + s.project_obs_count + ' obs</span>'
+            + '</div></a>';
+        }
+
+        // Row 2: Globally Endangered + Locally Endangered
         html += `<div class="highlights-grid">`;
         html += `<div class="highlight-card">
-          <h3>\u{1F6A8} Endangered Species <span class="highlight-count">${endangered.total} species</span></h3>
-          <p style="font-size:0.85rem;color:#888;margin-bottom:8px">Species with IUCN conservation status observed in this project</p>
-          ${categorySummary ? `<p style="font-size:0.9rem;margin-bottom:12px">${categorySummary}</p>` : ""}
+          <h3>\u{1F30D} Globally Endangered <span class="highlight-count">${endangered.total} species</span></h3>
+          <p style="font-size:0.85rem;color:#888;margin-bottom:12px">Species with global IUCN conservation status</p>
           ${endangered.species && endangered.species.length > 0
-            ? `<div class="scrollable-list">${endangered.species.map(s => {
-                const name = s.common_name || s.taxon_name || "Unknown";
-                const sci = s.taxon_name || "";
-                const photo = s.photo_url || "";
-                const color = iucnColors[s.status] || "#666";
-                const taxonUrl = s.taxon_id ? "https://www.inaturalist.org/observations?project_id=" + PROJECT_SLUG + "&taxon_id=" + s.taxon_id + "&verifiable=any" : "#";
-                return '<a class="species-list-item" href="' + taxonUrl + '" target="_blank">'
-                  + (photo ? '<img src="' + photo + '" alt="" />' : '<span style="width:40px;height:40px;border-radius:8px;background:#e8e8e8;display:inline-block;flex-shrink:0"></span>')
-                  + '<div class="sli-info">'
-                  + '<div class="sli-name">' + name + '</div>'
-                  + (sci && sci !== name ? '<div class="sli-sci">' + sci + '</div>' : '')
-                  + '</div>'
-                  + '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'
-                  + '<span style="background:' + color + ';color:#fff;font-size:0.7rem;font-weight:700;padding:3px 8px;border-radius:10px;white-space:nowrap">' + s.status + '</span>'
-                  + '<span class="sli-badge">' + s.project_obs_count + ' obs</span>'
-                  + '</div></a>';
-              }).join("")}</div>`
-            : `<div class="highlight-empty">No endangered species data available</div>`}
+            ? `<div class="scrollable-list">${endangered.species.map(s => endangeredItemHtml(s)).join("")}</div>`
+            : `<div class="highlight-empty">No globally endangered species found</div>`}
         </div>`;
+        html += `<div class="highlight-card">
+          <h3>\u{1F4CD} Locally Endangered <span class="highlight-count">${localEndangered.total} species</span></h3>
+          <p style="font-size:0.85rem;color:#888;margin-bottom:12px">Species with regional or local conservation status</p>
+          ${localEndangered.species && localEndangered.species.length > 0
+            ? `<div class="scrollable-list">${localEndangered.species.map(s => endangeredItemHtml(s)).join("")}</div>`
+            : `<div class="highlight-empty">No locally endangered species found</div>`}
+        </div>`;
+        html += `</div>`;
+
+        // Row 3: Endemic Species + Most Observed Species
+        html += `<div class="highlights-grid">`;
         html += `<div class="highlight-card">
           <h3>\u{1F3DD}\uFE0F Endemic Species <span class="highlight-count">${endemicSpecies.length} species</span></h3>
           <p style="font-size:0.85rem;color:#888;margin-bottom:12px">Species native and restricted to this region</p>
@@ -952,10 +960,6 @@
             ? `<div class="scrollable-list">${endemicSpecies.map(s => speciesItemHtml(s, s.obs_count ? s.obs_count + ' obs' : '')).join("")}</div>`
             : `<div class="highlight-empty">No endemic species data available</div>`}
         </div>`;
-        html += `</div>`;
-
-        // Row 3: Most Observed Species + Top Identifiers
-        html += `<div class="highlights-grid">`;
         html += `<div class="highlight-card">
           <h3>\u{1F3C5} Most Observed Species <span class="highlight-count">Top 10</span></h3>
           <p style="font-size:0.85rem;color:#888;margin-bottom:12px">Species with the most observations</p>
@@ -972,6 +976,10 @@
               }).join("")
             : `<div class="highlight-empty">No data available</div>`}
         </div>`;
+        html += `</div>`;
+
+        // Row 4: Top Identifiers + Most Favorited
+        html += `<div class="highlights-grid">`;
         html += `<div class="highlight-card">
           <h3>\u{1F50D} Top Identifiers <span class="highlight-count">Top 10</span></h3>
           <p style="font-size:0.85rem;color:#888;margin-bottom:12px">Users who contributed the most identifications</p>
@@ -988,10 +996,6 @@
               }).join("")
             : `<div class="highlight-empty">No data available</div>`}
         </div>`;
-        html += `</div>`;
-
-        // Row 4: Most Favorited + Most Commented
-        html += `<div class="highlights-grid">`;
         html += `<div class="highlight-card">
           <h3>\u2764\uFE0F Most Favorited <span class="highlight-count">Top 10</span></h3>
           <p style="font-size:0.85rem;color:#888;margin-bottom:12px">Observations with the most favorites</p>
@@ -999,6 +1003,10 @@
             ? topFavorited.map(o => obsItemHtml(o, `\u2764\uFE0F ${o.faves_count || 0}`)).join("")
             : `<div class="highlight-empty">No favorited observations</div>`}
         </div>`;
+        html += `</div>`;
+
+        // Row 5: Most Commented
+        html += `<div class="highlights-grid">`;
         html += `<div class="highlight-card">
           <h3>\u{1F4AC} Most Commented <span class="highlight-count">Top 10</span></h3>
           <p style="font-size:0.85rem;color:#888;margin-bottom:12px">Observations with the most comments</p>

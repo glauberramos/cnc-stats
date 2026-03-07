@@ -312,7 +312,9 @@ async function consolidateProject(slug, index, total) {
 
     // Batch-fetch global observation counts from iNat API (30 IDs per request)
     const globalCounts = {};
-    const conservationStatuses = {};
+    const globalConservation = {};
+    const localConservation = {};
+    const iucnNumToCode = { 50: "CR", 40: "EN", 30: "VU", 20: "NT", 10: "LC" };
     const BATCH_SIZE = 30;
     for (let i = 0; i < speciesIds.length; i += BATCH_SIZE) {
       const batch = speciesIds.slice(i, i + BATCH_SIZE);
@@ -320,11 +322,31 @@ async function consolidateProject(slug, index, total) {
       if (data.results) {
         data.results.forEach((t) => {
           globalCounts[t.id] = t.observations_count || 0;
+          // Global IUCN conservation status
           if (t.conservation_status && t.conservation_status.status) {
-            conservationStatuses[t.id] = {
+            globalConservation[t.id] = {
               status: t.conservation_status.status.toUpperCase(),
               status_name: t.conservation_status.status_name || t.conservation_status.status,
             };
+          }
+          // Regional/local conservation statuses
+          if (t.conservation_statuses && t.conservation_statuses.length > 0) {
+            // Pick the most severe regional status (excluding the global one if it exists)
+            let best = null;
+            for (const cs of t.conservation_statuses) {
+              if (cs.place && cs.iucn && cs.iucn > 10 && (!best || cs.iucn > best.iucn)) {
+                best = cs;
+              }
+            }
+            if (best) {
+              const code = iucnNumToCode[best.iucn] || best.status.toUpperCase();
+              localConservation[t.id] = {
+                status: code,
+                status_name: best.description || best.authority + " " + best.status,
+                place: best.place?.display_name || best.place?.name || "",
+                authority: best.authority || "",
+              };
+            }
           }
         });
       }
@@ -338,34 +360,44 @@ async function consolidateProject(slug, index, total) {
       speciesIds.filter((id) => globalCounts[id] !== undefined && (globalCounts[id] || 0) <= (projectObsCount[id] || 0))
     );
 
-    // Build endangered species stats from conservation statuses
-    const iucnCategories = { CR: "critically_endangered", EN: "endangered", VU: "vulnerable", NT: "near_threatened" };
-    const endangeredList = speciesIds
-      .filter((id) => conservationStatuses[id] && conservationStatuses[id].status !== "LC")
+    // Build globally endangered species list
+    const severityOrder = { CR: 0, EN: 1, VU: 2, NT: 3 };
+    const globalEndangeredList = speciesIds
+      .filter((id) => globalConservation[id] && globalConservation[id].status !== "LC")
       .map((id) => ({
         taxon_id: id,
         taxon_name: speciesInfo[id]?.taxon_name || "Unknown",
         common_name: speciesInfo[id]?.common_name || null,
         photo_url: speciesInfo[id]?.photo_url || null,
-        status: conservationStatuses[id].status,
-        status_name: conservationStatuses[id].status_name,
+        status: globalConservation[id].status,
+        status_name: globalConservation[id].status_name,
         project_obs_count: projectObsCount[id] || 0,
       }));
-    // Sort by severity: CR > EN > VU > NT > others
-    const severityOrder = { CR: 0, EN: 1, VU: 2, NT: 3 };
-    endangeredList.sort((a, b) => (severityOrder[a.status] ?? 99) - (severityOrder[b.status] ?? 99));
+    globalEndangeredList.sort((a, b) => (severityOrder[a.status] ?? 99) - (severityOrder[b.status] ?? 99));
 
-    const categoryCounts = {};
-    for (const key of Object.keys(iucnCategories)) { categoryCounts[iucnCategories[key]] = 0; }
-    endangeredList.forEach((s) => {
-      const cat = iucnCategories[s.status];
-      if (cat) categoryCounts[cat]++;
-    });
+    // Build locally endangered species list (species with regional status but no global status, or different local status)
+    const localEndangeredList = speciesIds
+      .filter((id) => localConservation[id] && !globalConservation[id])
+      .map((id) => ({
+        taxon_id: id,
+        taxon_name: speciesInfo[id]?.taxon_name || "Unknown",
+        common_name: speciesInfo[id]?.common_name || null,
+        photo_url: speciesInfo[id]?.photo_url || null,
+        status: localConservation[id].status,
+        status_name: localConservation[id].status_name,
+        place: localConservation[id].place,
+        authority: localConservation[id].authority,
+        project_obs_count: projectObsCount[id] || 0,
+      }));
+    localEndangeredList.sort((a, b) => (severityOrder[a.status] ?? 99) - (severityOrder[b.status] ?? 99));
 
     stats.endangered_species = {
-      total: endangeredList.length,
-      ...categoryCounts,
-      species: endangeredList,
+      total: globalEndangeredList.length,
+      species: globalEndangeredList,
+    };
+    stats.locally_endangered_species = {
+      total: localEndangeredList.length,
+      species: localEndangeredList,
     };
 
     // --- Fetch local observation counts (species rank or below only) ---
@@ -424,7 +456,8 @@ async function consolidateProject(slug, index, total) {
   } catch (err) {
     console.warn(`${prefix}: rare species fetch failed: ${err.message}`);
     stats.first_observations = [];
-    stats.endangered_species = { total: 0, critically_endangered: 0, endangered: 0, vulnerable: 0, near_threatened: 0, species: [] };
+    stats.endangered_species = { total: 0, species: [] };
+    stats.locally_endangered_species = { total: 0, species: [] };
   }
 
   // --- Endemic species (requires iNat API + place_ids) ---
