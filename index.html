@@ -141,7 +141,7 @@
         const obsCount = p.computed_stats?.summary?.total_observations ?? 0;
         const obs = obsCount.toLocaleString() + " obs";
         return `
-          <a class="project-link" href="project.html?project=${p.slug}">
+          <a class="project-link" href="/project.html?project=${p.slug}">
             <img src="${icon}" alt="" />
             <div class="pl-info">
               <div class="pl-title">${title}</div>
