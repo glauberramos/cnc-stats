@@ -1,0 +1,1045 @@
+/* Dark mode toggle button */
+.dark-mode-toggle {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #74ac00;
+  border: none;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  cursor: pointer;
+  font-size: 1.3rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dark-mode-toggle:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+@media (max-width: 480px) {
+  .dark-mode-toggle {
+    top: 10px;
+    right: 10px;
+    width: 38px;
+    height: 38px;
+    font-size: 1.1rem;
+  }
+}
+
+/* Dark mode base styles */
+body.dark-mode {
+  background-color: #1a1a1a;
+  color: #e0e0e0;
+}
+
+body.dark-mode .container {
+  background-color: #1a1a1a;
+}
+
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3 {
+  color: #e0e0e0;
+}
+
+body.dark-mode .description,
+body.dark-mode .subtitle {
+  color: #aaa;
+}
+
+body.dark-mode input,
+body.dark-mode select {
+  background: #3d3d3d;
+  border-color: #555;
+  color: #e0e0e0;
+}
+
+body.dark-mode input::placeholder {
+  color: #888;
+}
+
+body.dark-mode button {
+  background: #74ac00;
+}
+
+body.dark-mode button:hover {
+  background: #5d8a00;
+}
+
+body.dark-mode button:disabled {
+  background: #555;
+  color: #888;
+}
+
+/* Merge toolbar buttons - keep visible on green background */
+body.dark-mode .merge-btn {
+  background: white;
+  color: #74ac00;
+}
+
+body.dark-mode .merge-btn:hover {
+  background: #f0f0f0;
+}
+
+body.dark-mode .merge-btn:disabled {
+  background: #ccc;
+  color: #888;
+}
+
+body.dark-mode .cancel-merge-btn {
+  background: transparent;
+  color: white;
+  border-color: white;
+}
+
+body.dark-mode .cancel-merge-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Card styles */
+body.dark-mode .summary-card,
+body.dark-mode .stats-card,
+body.dark-mode .tool-card {
+  background: #2d2d2d;
+  border-color: #444;
+}
+
+body.dark-mode .tool-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .tool-card h2 {
+  color: #e0e0e0;
+}
+
+body.dark-mode .tool-card p {
+  color: #aaa;
+}
+
+/* Species cards and grids */
+body.dark-mode .species-card,
+body.dark-mode .project-card {
+  background: #2d2d2d;
+  border-color: #444;
+}
+
+body.dark-mode .species-card.observed {
+  border-color: #27ae60;
+}
+
+body.dark-mode .species-card h3,
+body.dark-mode .project-card h3 {
+  color: #e0e0e0;
+}
+
+body.dark-mode .species-card p,
+body.dark-mode .project-card p {
+  color: #aaa;
+}
+
+body.dark-mode .scientific-name {
+  color: #999;
+}
+
+body.dark-mode .observations {
+  color: #888;
+}
+
+/* Species list items */
+body.dark-mode .species-item {
+  border-bottom-color: #444;
+}
+
+body.dark-mode .species-item:hover {
+  background: #333;
+}
+
+body.dark-mode .species-name {
+  color: #e0e0e0;
+}
+
+body.dark-mode .species-scientific {
+  color: #999;
+}
+
+body.dark-mode .species-date {
+  color: #777;
+}
+
+/* Results containers */
+body.dark-mode .results-container {
+  background: #2d2d2d;
+}
+
+body.dark-mode .results-header {
+  border-color: #444;
+}
+
+/* Progress bars */
+body.dark-mode .progress-container {
+  background: #2d2d2d;
+}
+
+body.dark-mode .progress-bar-bg {
+  background: #444;
+}
+
+body.dark-mode .progress-text {
+  color: #aaa;
+}
+
+body.dark-mode .current-check {
+  color: #777;
+}
+
+/* Year separator */
+body.dark-mode .year-separator {
+  background: #5d8a00;
+}
+
+/* Autocomplete */
+body.dark-mode .autocomplete,
+body.dark-mode .place-autocomplete,
+body.dark-mode .username-autocomplete,
+body.dark-mode .taxon-autocomplete {
+  background: #2d2d2d;
+  border-color: #444;
+}
+
+body.dark-mode .autocomplete-item,
+body.dark-mode .place-suggestion,
+body.dark-mode .username-suggestion,
+body.dark-mode .taxon-suggestion {
+  border-bottom-color: #444;
+}
+
+body.dark-mode .autocomplete-item:hover,
+body.dark-mode .place-suggestion:hover,
+body.dark-mode .username-suggestion:hover,
+body.dark-mode .taxon-suggestion:hover {
+  background: #3d3d3d;
+}
+
+body.dark-mode .autocomplete-name,
+body.dark-mode .place-name,
+body.dark-mode .username-name,
+body.dark-mode .taxon-name {
+  color: #e0e0e0;
+}
+
+body.dark-mode .autocomplete-login,
+body.dark-mode .place-details,
+body.dark-mode .username-info,
+body.dark-mode .taxon-rank {
+  color: #aaa;
+}
+
+/* Status bar */
+body.dark-mode .status-bar {
+  background: #2d2d2d;
+}
+
+body.dark-mode .status-text {
+  color: #e0e0e0;
+}
+
+body.dark-mode .progress-bar {
+  background: #74ac00;
+}
+
+/* Checkbox containers */
+body.dark-mode .checkbox-container {
+  background: #2d2d2d;
+}
+
+body.dark-mode .location-name {
+  color: #e0e0e0;
+}
+
+body.dark-mode label {
+  color: #ccc;
+}
+
+/* Location info */
+body.dark-mode .location-info {
+  background: #2d2d2d;
+  color: #e0e0e0;
+}
+
+/* Error messages */
+body.dark-mode .error,
+body.dark-mode .error-message {
+  background: #3d2020;
+  color: #ff8080;
+}
+
+/* Pagination */
+body.dark-mode .pagination .page-info {
+  color: #aaa;
+}
+
+/* Links */
+body.dark-mode a {
+  color: #8bc34a;
+}
+
+body.dark-mode a:hover {
+  color: #9acd32;
+}
+
+/* Back button - keep it green in dark mode */
+body.dark-mode .back-button {
+  background: #74ac00;
+}
+
+body.dark-mode .back-button:hover {
+  background: #659900;
+}
+
+/* Badges */
+body.dark-mode .only-observer-badge,
+body.dark-mode .umbrella-badge {
+  background: #3498db;
+}
+
+body.dark-mode .threatened-badge {
+  background: #c0392b;
+}
+
+/* View controls */
+body.dark-mode .view-btn {
+  background: #3d3d3d;
+  border-color: #555;
+  color: #e0e0e0;
+}
+
+body.dark-mode .view-btn.active {
+  background: #74ac00;
+  border-color: #74ac00;
+  color: white;
+}
+
+/* Table view */
+body.dark-mode .species-table {
+  background: #2d2d2d;
+}
+
+body.dark-mode .species-table th {
+  background: #3d3d3d;
+  color: #e0e0e0;
+  border-color: #555;
+}
+
+body.dark-mode .species-table td {
+  border-color: #444;
+  color: #e0e0e0;
+}
+
+body.dark-mode .species-table tr:hover td {
+  background: #333;
+}
+
+/* Taxon chart */
+body.dark-mode .taxon-chart {
+  background: #2d2d2d;
+}
+
+body.dark-mode .taxon-bar-value {
+  color: #aaa;
+}
+
+/* User info */
+body.dark-mode .user-info-top {
+  background: #2d2d2d;
+}
+
+body.dark-mode .user-name {
+  color: #e0e0e0;
+}
+
+body.dark-mode .user-login {
+  color: #aaa;
+}
+
+body.dark-mode .user-stat-value {
+  color: #74ac00;
+}
+
+body.dark-mode .user-stat-label {
+  color: #888;
+}
+
+/* Controls */
+body.dark-mode .controls label {
+  color: #ccc;
+}
+
+/* User info card (species-observed) */
+body.dark-mode .user-info-card {
+  background: #2d2d2d;
+  border-color: #444;
+}
+
+body.dark-mode .user-meta {
+  color: #aaa;
+}
+
+body.dark-mode .user-meta-item {
+  color: #aaa;
+}
+
+body.dark-mode .user-avatar-placeholder {
+  background: #3d3d3d;
+  border-color: #555;
+}
+
+/* Taxon chart bar containers */
+body.dark-mode .taxon-bar-container {
+  background: #3d3d3d;
+}
+
+/* View buttons container */
+body.dark-mode .view-buttons {
+  border-color: #555;
+}
+
+body.dark-mode .view-btn:not(.active):hover {
+  background: #4d4d4d;
+}
+
+/* Species card content (species-observed) */
+body.dark-mode .species-common-name {
+  color: #e0e0e0;
+}
+
+body.dark-mode .species-sci-name {
+  color: #999;
+}
+
+body.dark-mode .species-stats {
+  color: #aaa;
+}
+
+body.dark-mode .species-image-placeholder {
+  background: #3d3d3d;
+  color: #888;
+}
+
+/* Table view placeholder */
+body.dark-mode .table-image-placeholder {
+  background: #3d3d3d;
+  color: #888;
+}
+
+body.dark-mode .table-common-name {
+  color: #e0e0e0;
+}
+
+body.dark-mode .table-sci-name {
+  color: #999;
+}
+
+/* Results count text */
+body.dark-mode #resultsCount {
+  color: #aaa;
+}
+
+/* Loading text */
+body.dark-mode .loading {
+  color: #aaa;
+}
+
+/* Profile page styles */
+body.dark-mode .profile-header {
+  background: linear-gradient(135deg, #5d8a00 0%, #4a7000 100%);
+}
+
+body.dark-mode .profile-link {
+  color: white;
+}
+
+body.dark-mode .profile-link:hover {
+  color: white;
+}
+
+body.dark-mode .search-card,
+body.dark-mode .chart-card,
+body.dark-mode .stat-card {
+  background: #2d2d2d;
+  border-color: #444;
+}
+
+body.dark-mode .stat-label {
+  color: #aaa;
+}
+
+body.dark-mode .chart-title {
+  color: #e0e0e0;
+}
+
+body.dark-mode .legend-label {
+  color: #aaa;
+}
+
+body.dark-mode .legend-value {
+  color: #e0e0e0;
+}
+
+body.dark-mode .taxon-bar-wrapper {
+  background: #3d3d3d;
+}
+
+body.dark-mode .taxon-bar-name {
+  color: #888;
+}
+
+body.dark-mode .empty-state {
+  color: #888;
+}
+
+body.dark-mode .empty-state-text {
+  color: #aaa;
+}
+
+body.dark-mode .map-subtitle {
+  color: #aaa;
+}
+
+/* Countries section */
+body.dark-mode .countries-subtitle {
+  color: #aaa;
+}
+
+body.dark-mode .country-item {
+  background: #3d3d3d;
+}
+
+body.dark-mode .country-item:hover {
+  background: #4d4d4d;
+}
+
+body.dark-mode .country-name {
+  color: #e0e0e0;
+}
+
+body.dark-mode .country-count {
+  color: #aaa;
+}
+
+body.dark-mode .countries-loading {
+  color: #aaa;
+}
+
+body.dark-mode .countries-progress {
+  color: #888;
+}
+
+/* Projects section */
+body.dark-mode .projects-subtitle {
+  color: #aaa;
+}
+
+body.dark-mode .project-item {
+  background: #3d3d3d;
+  color: #e0e0e0;
+}
+
+body.dark-mode .project-item:hover {
+  background: #4d4d4d;
+}
+
+body.dark-mode .project-name {
+  color: #e0e0e0;
+}
+
+body.dark-mode .projects-loading,
+body.dark-mode .no-projects,
+body.dark-mode .projects-error {
+  color: #aaa;
+}
+
+body.dark-mode .projects-category-title {
+  color: #888;
+}
+
+/* Language select */
+body.dark-mode .language-select {
+  background-color: #3d3d3d;
+  border-color: #555 !important;
+  color: #e0e0e0;
+}
+
+body.dark-mode .language-select option {
+  background-color: #3d3d3d;
+  color: #e0e0e0;
+}
+
+/* Calendar dark mode */
+body.dark-mode .calendar-card {
+  background: #2d2d2d;
+}
+
+body.dark-mode .calendar-year-select {
+  background-color: #3d3d3d;
+  border-color: #555;
+  color: #e0e0e0;
+}
+
+body.dark-mode .calendar-year-select option {
+  background-color: #3d3d3d;
+  color: #e0e0e0;
+}
+
+body.dark-mode .calendar-streak-info {
+  color: #b0b0b0;
+}
+
+body.dark-mode .calendar-streak-info strong {
+  color: #7cc643;
+}
+
+body.dark-mode .calendar-weekdays,
+body.dark-mode .calendar-months {
+  color: #8b949e;
+}
+
+body.dark-mode .calendar-day {
+  background: #161b22;
+  border: 1px solid rgba(27, 31, 35, 0.06);
+}
+
+body.dark-mode .calendar-day[data-level="1"] { background: #1a4d2e; }
+body.dark-mode .calendar-day[data-level="2"] { background: #2d7a4a; }
+body.dark-mode .calendar-day[data-level="3"] { background: #3da35d; }
+body.dark-mode .calendar-day[data-level="4"] { background: #52d17c; }
+
+body.dark-mode .calendar-day:hover {
+  outline: 2px solid rgba(255, 255, 255, 0.5);
+  outline-offset: -1px;
+}
+
+body.dark-mode .calendar-day.today {
+  outline: 2px solid #7cc643;
+  outline-offset: -1px;
+}
+
+/* Lifelist grid view */
+body.dark-mode .species-card {
+  background: #2d2d2d;
+  border-color: #444;
+}
+
+body.dark-mode .species-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .species-card .card-image-placeholder {
+  background: #3d3d3d;
+  color: #888;
+}
+
+body.dark-mode .species-card .card-common-name {
+  color: #e0e0e0;
+}
+
+body.dark-mode .species-card .card-sci-name {
+  color: #999;
+}
+
+body.dark-mode .species-card .card-date {
+  color: #777;
+}
+
+body.dark-mode .grid-year-separator {
+  background: #5d8a00;
+}
+
+body.dark-mode .view-toggle .view-btn {
+  background: #3d3d3d;
+  border-color: #555;
+  color: #e0e0e0;
+}
+
+body.dark-mode .view-toggle .view-btn:hover {
+  background: #4d4d4d;
+}
+
+body.dark-mode .view-toggle .view-btn.active {
+  background: #74ac00;
+  border-color: #74ac00;
+  color: white;
+}
+
+/* Species-observed controls */
+body.dark-mode #iconicTaxonSelect,
+body.dark-mode #sortSelect {
+  background: #3d3d3d !important;
+  border-color: #555 !important;
+  color: #e0e0e0;
+}
+
+body.dark-mode #iconicTaxonSelect option,
+body.dark-mode #sortSelect option {
+  background: #3d3d3d;
+  color: #e0e0e0;
+}
+
+body.dark-mode #filterInput {
+  background: #3d3d3d;
+  border-color: #555 !important;
+  color: #e0e0e0;
+}
+
+body.dark-mode #filterInput::placeholder {
+  color: #888;
+}
+
+/* US States map page */
+body.dark-mode .map-container {
+  background: #2d2d2d;
+  border-color: #444;
+}
+
+body.dark-mode #us-map path {
+  fill: #3d3d3d;
+  stroke: #555;
+}
+
+body.dark-mode #us-map path.observed {
+  fill: #74ac00;
+}
+
+body.dark-mode .stats-display {
+  color: #e0e0e0;
+}
+
+body.dark-mode .stats-display .count {
+  color: #74ac00;
+}
+
+body.dark-mode .loading-text {
+  color: #aaa;
+}
+
+body.dark-mode #statesList {
+  background: #2d2d2d;
+  border-color: #444;
+}
+
+body.dark-mode #observedStatesList {
+  color: #aaa;
+}
+
+body.dark-mode #observedStatesList a {
+  color: #8bc34a;
+}
+
+/* Checkbox label */
+body.dark-mode .checkbox-label {
+  color: #aaa;
+}
+
+/* Species Compare page */
+body.dark-mode .results-column {
+  background: #2d2d2d;
+  border-color: #444;
+}
+
+body.dark-mode .column-header {
+  border-bottom-color: #444;
+}
+
+body.dark-mode .column-header.place-a {
+  background: #1a3d1a;
+  color: #6fbf6f;
+}
+
+body.dark-mode .column-header.shared {
+  background: #3d2a1a;
+  color: #e6a060;
+}
+
+body.dark-mode .column-header.place-b {
+  background: #1a2a3d;
+  color: #6fa0d0;
+}
+
+body.dark-mode .species-list {
+  background: #2d2d2d;
+}
+
+body.dark-mode .species-item:hover {
+  background: #3d3d3d;
+}
+
+body.dark-mode .species-common {
+  color: #e0e0e0;
+}
+
+body.dark-mode .species-count {
+  color: #aaa;
+}
+
+body.dark-mode .stat-box {
+  background: #2d2d2d;
+  border-color: #444;
+}
+
+body.dark-mode .stat-box .stat-number {
+  color: #e0e0e0;
+}
+
+body.dark-mode .stat-box.place-a .stat-number {
+  color: #6fbf6f;
+}
+
+body.dark-mode .stat-box.shared .stat-number {
+  color: #e6a060;
+}
+
+body.dark-mode .stat-box.place-b .stat-number {
+  color: #6fa0d0;
+}
+
+body.dark-mode .stat-box .stat-label {
+  color: #aaa;
+}
+
+body.dark-mode .vs-divider {
+  color: #74ac00;
+}
+
+body.dark-mode .species-item .placeholder {
+  background: #3d3d3d;
+  color: #888;
+}
+
+body.dark-mode .taxon-select,
+body.dark-mode .limit-select {
+  background: #3d3d3d !important;
+  border-color: #555 !important;
+  color: #e0e0e0;
+}
+
+body.dark-mode .taxon-select option,
+body.dark-mode .limit-select option {
+  background: #3d3d3d;
+  color: #e0e0e0;
+}
+
+body.dark-mode .species-item.user-observed {
+  background: rgba(116, 172, 0, 0.15);
+  border-left-color: #74ac00;
+}
+
+body.dark-mode .species-item.user-observed:hover {
+  background: rgba(116, 172, 0, 0.25);
+}
+
+body.dark-mode .observed-check {
+  color: #8bc34a;
+}
+
+/* Family Completion page */
+body.dark-mode .family-card {
+  background: #2d2d2d;
+  border-color: #444;
+}
+
+body.dark-mode .family-card.observed {
+  border-left-color: #27ae60;
+}
+
+body.dark-mode .family-card.not-observed {
+  opacity: 0.7;
+}
+
+body.dark-mode .family-card.not-observed:hover {
+  opacity: 1;
+}
+
+body.dark-mode .family-name {
+  color: #e0e0e0;
+}
+
+body.dark-mode .family-name a {
+  color: #e0e0e0;
+}
+
+body.dark-mode .family-common-name {
+  color: #aaa;
+}
+
+body.dark-mode .family-stats {
+  color: #aaa;
+}
+
+body.dark-mode .family-photo-placeholder {
+  background: #3d3d3d;
+  color: #888;
+}
+
+body.dark-mode .iconic-btn {
+  background: #3d3d3d;
+  border-color: #555;
+  color: #e0e0e0;
+}
+
+body.dark-mode .iconic-btn:hover {
+  background: #74ac00;
+  color: white;
+  border-color: #74ac00;
+}
+
+body.dark-mode .iconic-btn.active {
+  background: #74ac00;
+  color: white;
+  border-color: #74ac00;
+}
+
+/* Order Completion page */
+body.dark-mode .order-card {
+  background: #2d2d2d;
+  border-color: #444;
+}
+
+body.dark-mode .order-card.observed {
+  border-left-color: #27ae60;
+}
+
+body.dark-mode .order-card.not-observed {
+  opacity: 0.7;
+}
+
+body.dark-mode .order-card.not-observed:hover {
+  opacity: 1;
+}
+
+body.dark-mode .order-name {
+  color: #e0e0e0;
+}
+
+body.dark-mode .order-common-name {
+  color: #aaa;
+}
+
+body.dark-mode .order-stats {
+  color: #aaa;
+}
+
+body.dark-mode .order-photo-placeholder {
+  background: #3d3d3d;
+  color: #888;
+}
+
+/* Taxonomy Completion page */
+body.dark-mode .taxon-card {
+  background: #2d2d2d;
+  border-color: #444;
+}
+
+body.dark-mode .taxon-card.observed {
+  border-left-color: #27ae60;
+}
+
+body.dark-mode .taxon-card.not-observed {
+  opacity: 0.7;
+}
+
+body.dark-mode .taxon-card.not-observed:hover {
+  opacity: 1;
+}
+
+body.dark-mode .taxon-name {
+  color: #e0e0e0;
+}
+
+body.dark-mode .taxon-common-name {
+  color: #aaa;
+}
+
+body.dark-mode .taxon-stats {
+  color: #aaa;
+}
+
+body.dark-mode .taxon-photo-placeholder {
+  background: #3d3d3d;
+  color: #888;
+}
+
+body.dark-mode .rank-select {
+  background: #3d3d3d;
+  border-color: #555;
+  color: #e0e0e0;
+}
+
+body.dark-mode #iconicFilterSelect {
+  background: #3d3d3d;
+  border-color: #555;
+  color: #e0e0e0;
+}
+
+body.dark-mode .progress-banner {
+  background: #2d2d2d;
+}
+
+body.dark-mode .progress-bar-large {
+  background: #444;
+}
+
+body.dark-mode .progress-text {
+  color: #e0e0e0;
+}
+
+body.dark-mode .progress-subtext {
+  color: #aaa;
+}
+
+body.dark-mode .progress-bar-container {
+  background: #444;
+}
+
+body.dark-mode .stat-value {
+  color: #e0e0e0;
+}
+
+body.dark-mode .stat-label {
+  color: #aaa;
+}
+
+body.dark-mode .not-observed-badge {
+  background: #444;
+  color: #aaa;
+}
+
+body.dark-mode .loading-container {
+  color: #aaa;
+}
+
+body.dark-mode .loading-subtext {
+  color: #777;
+}
+
+body.dark-mode #searchFilter {
+  background: #3d3d3d;
+  border-color: #555 !important;
+  color: #e0e0e0;
+}
+
+body.dark-mode #searchFilter::placeholder {
+  color: #888;
+}
+
+body.dark-mode #filterSelect {
+  background: #3d3d3d !important;
+  border-color: #555 !important;
+  color: #e0e0e0;
+}
+
