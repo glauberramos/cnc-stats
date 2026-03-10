@@ -367,7 +367,7 @@ async function syncProject(projectSlug, index, total) {
 
 // ─── Step 3: Sync taxa data to cnc_taxa ───
 async function syncTaxa(projects) {
-  console.log(`\n=== Step 4: Syncing taxa data ===\n`);
+  console.log(`\n=== Step 3: Syncing taxa data ===\n`);
 
   // Collect all unique species IDs across synced projects
   const allSpeciesIds = new Set();
@@ -437,9 +437,9 @@ async function syncTaxa(projects) {
   console.log(`\n=== Taxa sync complete: ${fetched} new taxa cached ===`);
 }
 
-// ─── Step 5: Sync local counts + endemic species to cnc_project_species ───
+// ─── Step 4: Sync local counts + endemic species to cnc_project_species ───
 async function syncLocalCountsAndEndemics(projects) {
-  console.log(`\n=== Step 5: Syncing local counts & endemic species ===\n`);
+  console.log(`\n=== Step 4: Syncing local counts & endemic species ===\n`);
 
   for (let pi = 0; pi < projects.length; pi++) {
     const project = projects[pi];

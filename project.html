@@ -88,8 +88,6 @@
       .map-subtitle .coverage-pct { color: #2E7D32; font-weight: 900; }
       body.dark-mode .map-container { border-color: #444; background: #1a1a1a; }
       body.dark-mode .map-subtitle { color: #999; }
-      body.dark-mode #speciesCoverage { color: #999 !important; }
-      body.dark-mode #speciesCoveragePct { color: #6abf69 !important; }
 
       /* Section titles */
       .section-title {
@@ -842,7 +840,7 @@
 
           mapContainer.innerHTML = html;
 
-          mapSubtitle.innerHTML = `${observedCells.size} grid squares with observations · <span class="coverage-pct">${coveragePct}% coverage</span>`;
+          mapSubtitle.innerHTML = `${observedCells.size} grid squares with observations · <span class="coverage-pct">${coveragePct}% area coverage</span>`;
 
           // Species coverage: project species vs total species in the area
           const projectSpecies = stats?.summary?.total_species || 0;
@@ -853,10 +851,7 @@
               const areaSpecies = scData.total_results || 0;
               if (areaSpecies > 0) {
                 const speciesPct = Math.round(projectSpecies / areaSpecies * 100);
-                const el = document.getElementById("speciesCoverage");
-                document.getElementById("speciesCoveragePct").textContent = `${speciesPct}% species covered`;
-                document.getElementById("speciesCoverageDetail").textContent = ` · ${projectSpecies.toLocaleString()} of ${areaSpecies.toLocaleString()} species in this area`;
-                el.style.display = "block";
+                mapSubtitle.innerHTML += `<br><span class="coverage-pct">${speciesPct}% species covered</span> · ${projectSpecies.toLocaleString()} of ${areaSpecies.toLocaleString()} species in this area`;
               }
             } catch (e) { /* ignore */ }
           }
@@ -957,10 +952,6 @@
           <h3>\u{1F5FA}\uFE0F Observations Coverage</h3>
           <div class="map-subtitle" id="mapSubtitle">Loading map...</div>
           <div class="map-container" id="observationMap" style="grid-template-columns: repeat(32, 1fr)"></div>
-          <div id="speciesCoverage" style="display:none;margin-top:12px;text-align:center;color:#555;font-size:1.1rem">
-            <span style="color:#2E7D32;font-weight:900" id="speciesCoveragePct"></span>
-            <span id="speciesCoverageDetail"></span>
-          </div>
         </div>`;
         html += `<div class="highlight-card">
           <h3>\u{2B50} First Observations <span class="highlight-count">${firstObservations.length} species</span></h3>
