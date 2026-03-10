@@ -35,7 +35,7 @@ const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 // ─── Rate limiter ───
 let lastRequestTime = 0;
 
-async function rateLimitedFetch(url) {
+async function rateLimitedFetch(url, retries = 3) {
   const now = Date.now();
   const elapsed = now - lastRequestTime;
   if (elapsed < 1000) {
@@ -43,15 +43,26 @@ async function rateLimitedFetch(url) {
   }
   lastRequestTime = Date.now();
 
-  const response = await fetch(url, {
-    headers: { "User-Agent": "CNC-Sync-Script/1.0" },
-  });
+  let response;
+  try {
+    response = await fetch(url, {
+      headers: { "User-Agent": "CNC-Sync-Script/1.0" },
+    });
+  } catch (err) {
+    if (retries > 0) {
+      console.warn(`  Network error: ${err.message}. Retrying in 10s... (${retries} left)`);
+      await new Promise((r) => setTimeout(r, 10000));
+      lastRequestTime = Date.now();
+      return rateLimitedFetch(url, retries - 1);
+    }
+    throw err;
+  }
 
   if (response.status === 429) {
     console.warn("  Rate limited (429). Waiting 60s...");
     await new Promise((r) => setTimeout(r, 60000));
     lastRequestTime = Date.now();
-    return rateLimitedFetch(url);
+    return rateLimitedFetch(url, retries);
   }
 
   if (!response.ok) {

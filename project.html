@@ -851,7 +851,7 @@
               const areaSpecies = scData.total_results || 0;
               if (areaSpecies > 0) {
                 const speciesPct = Math.round(projectSpecies / areaSpecies * 100);
-                mapSubtitle.innerHTML += `<br><span class="coverage-pct">${speciesPct}% species covered</span> · ${projectSpecies.toLocaleString()} of ${areaSpecies.toLocaleString()} species in this area`;
+                mapSubtitle.innerHTML += `<br>${projectSpecies.toLocaleString()} of ${areaSpecies.toLocaleString()} species in this area · <span class="coverage-pct">${speciesPct}% species covered</span>`;
               }
             } catch (e) { /* ignore */ }
           }
