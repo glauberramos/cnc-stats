@@ -4,13 +4,11 @@ import { createClient } from "@supabase/supabase-js";
 // ─── Config ───
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_KEY;
-const SPECIES_OR_BELOW = new Set(["species", "subspecies", "variety", "form", "hybrid", "infraspecies"]);
 
 // CLI args
 const args = process.argv.slice(2);
 const singleProject = args.find((a) => a.startsWith("--project="))?.split("=")[1];
 const dryRun = args.includes("--dry-run");
-const onlyIdentifications = args.includes("--only-identifications");
 const forceConsolidate = args.includes("--force");
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
@@ -19,35 +17,6 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
 }
 
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-const API_BASE = "https://api.inaturalist.org/v1";
-let lastRequestTime = 0;
-
-async function rateLimitedFetch(url) {
-  const now = Date.now();
-  const elapsed = now - lastRequestTime;
-  if (elapsed < 1000) {
-    await new Promise((r) => setTimeout(r, 1000 - elapsed));
-  }
-  lastRequestTime = Date.now();
-
-  const response = await fetch(url, {
-    headers: { "User-Agent": "CNC-Consolidate-Script/1.0" },
-  });
-
-  if (response.status === 429) {
-    console.warn("  Rate limited (429). Waiting 60s...");
-    await new Promise((r) => setTimeout(r, 60000));
-    lastRequestTime = Date.now();
-    return rateLimitedFetch(url);
-  }
-
-  if (!response.ok) {
-    throw new Error(`API error ${response.status}: ${url}`);
-  }
-
-  return response.json();
-}
 
 // ─── Leaf species algorithm ───
 function computeLeafSpecies(obs) {
@@ -71,7 +40,7 @@ function computeLeafSpecies(obs) {
   return leafSpecies;
 }
 
-// ─── Fetch all observations for a project ───
+// ─── Fetch all observations for a project from Supabase ───
 async function fetchAllObservations(slug) {
   let allObs = [];
   let from = 0;
@@ -93,6 +62,50 @@ async function fetchAllObservations(slug) {
     from += pageSize;
   }
   return allObs;
+}
+
+// ─── Fetch taxa data from cnc_taxa ───
+async function fetchTaxaMap(speciesIds) {
+  const taxaMap = {};
+  for (let i = 0; i < speciesIds.length; i += 1000) {
+    const batch = speciesIds.slice(i, i + 1000);
+    const { data, error } = await db
+      .from("cnc_taxa")
+      .select("*")
+      .in("taxon_id", batch);
+    if (error) {
+      console.warn(`  Taxa fetch error: ${error.message}`);
+      continue;
+    }
+    if (data) {
+      data.forEach((t) => { taxaMap[t.taxon_id] = t; });
+    }
+  }
+  return taxaMap;
+}
+
+// ─── Fetch project species data from cnc_project_species ───
+async function fetchProjectSpeciesMap(slug) {
+  const map = {};
+  let from = 0;
+  const pageSize = 1000;
+  while (true) {
+    const { data, error } = await db
+      .from("cnc_project_species")
+      .select("*")
+      .eq("project_slug", slug)
+      .range(from, from + pageSize - 1);
+
+    if (error) {
+      console.warn(`  Project species fetch error: ${error.message}`);
+      break;
+    }
+    if (!data || data.length === 0) break;
+    data.forEach((r) => { map[r.taxon_id] = r; });
+    if (data.length < pageSize) break;
+    from += pageSize;
+  }
+  return map;
 }
 
 // ─── Compute all metrics ───
@@ -173,93 +186,8 @@ function computeStats(allObs) {
   };
 }
 
-// ─── Fetch and compute identification stats ───
-async function fetchIdentificationStats(slug, prefix) {
-  console.log(`${prefix}: fetching identification stats...`);
-  const data = await rateLimitedFetch(`${API_BASE}/observations/identification_categories?project_id=${slug}`);
-  const idCounts = { improving: 0, supporting: 0, leading: 0, maverick: 0 };
-  let totalIds = 0;
-  for (const result of data.results || []) {
-    if (result.category in idCounts) {
-      idCounts[result.category] = result.count || 0;
-      totalIds += idCounts[result.category];
-    }
-  }
-  // Fetch total unique identifiers + top 10
-  let totalIdentifiers = 0;
-  let topIdentifiers = [];
-  try {
-    const identifiersData = await rateLimitedFetch(`${API_BASE}/observations/identifiers?project_id=${slug}&per_page=10`);
-    totalIdentifiers = identifiersData.total_results || 0;
-    topIdentifiers = (identifiersData.results || []).map((r) => ({
-      login: r.user?.login || "?",
-      icon: r.user?.icon_url || r.user?.icon || "",
-      count: r.count || 0,
-    }));
-  } catch (err) {
-    console.warn(`${prefix}: identifiers count fetch failed: ${err.message}`);
-  }
-
-  return {
-    total: totalIds,
-    total_identifiers: totalIdentifiers,
-    top_identifiers: topIdentifiers,
-    improving: idCounts.improving,
-    supporting: idCounts.supporting,
-    leading: idCounts.leading,
-    maverick: idCounts.maverick,
-  };
-}
-
-// ─── Consolidate only identifications for a project ───
-async function consolidateIdentificationsOnly(slug, index, total) {
-  const prefix = `[${index}/${total}] ${slug}`;
-
-  // Load existing computed_stats
-  const { data, error: fetchErr } = await db
-    .from("cnc_projects")
-    .select("computed_stats")
-    .eq("slug", slug)
-    .single();
-
-  if (fetchErr || !data?.computed_stats) {
-    console.log(`${prefix}: no existing stats, skipping (run full consolidation first)`);
-    return;
-  }
-
-  const stats = data.computed_stats;
-
-  try {
-    stats.identifications = await fetchIdentificationStats(slug, prefix);
-  } catch (err) {
-    console.warn(`${prefix}: identifications fetch failed: ${err.message}`);
-    stats.identifications = null;
-  }
-
-  if (!dryRun) {
-    const { error } = await db
-      .from("cnc_projects")
-      .update({
-        computed_stats: stats,
-        computed_at: new Date().toISOString(),
-      })
-      .eq("slug", slug);
-
-    if (error) {
-      console.error(`${prefix}: update error: ${error.message}`);
-      return;
-    }
-  }
-
-  console.log(`${prefix}: identifications updated — ${stats.identifications?.total || 0} total ${dryRun ? "[DRY RUN]" : ""}`);
-}
-
 // ─── Consolidate a single project ───
 async function consolidateProject(slug, index, total) {
-  if (onlyIdentifications) {
-    return consolidateIdentificationsOnly(slug, index, total);
-  }
-
   const prefix = `[${index}/${total}] ${slug}`;
   console.log(`${prefix}: loading observations...`);
 
@@ -272,212 +200,102 @@ async function consolidateProject(slug, index, total) {
   console.log(`${prefix}: computing stats for ${allObs.length} obs...`);
   const stats = computeStats(allObs);
 
-  // --- Fetch place_ids for local species counts ---
-  let placeIds = [];
-  try {
-    console.log(`${prefix}: fetching project place_ids...`);
-    const projectData = await rateLimitedFetch(`${API_BASE}/projects/${slug}`);
-    if (projectData.results && projectData.results.length > 0) {
-      const proj = projectData.results[0];
-      const placeParam = (proj.search_parameters || []).find((p) => p.field === "place_id");
-      if (placeParam && Array.isArray(placeParam.value)) {
-        placeIds = placeParam.value;
-      } else if (proj.place_id) {
-        placeIds = [proj.place_id];
-      }
+  // --- Load taxa data from cnc_taxa ---
+  const leafSpecies = computeLeafSpecies(allObs);
+  const speciesIds = [...leafSpecies];
+
+  // Build project obs counts per species
+  const projectObsCount = {};
+  const speciesInfo = {};
+  allObs.forEach((o) => {
+    if (!o.min_species_taxon_id || !leafSpecies.has(o.min_species_taxon_id)) return;
+    const tid = o.min_species_taxon_id;
+    projectObsCount[tid] = (projectObsCount[tid] || 0) + 1;
+    if (!speciesInfo[tid] || o.taxon_rank === "species") {
+      speciesInfo[tid] = {
+        taxon_name: o.taxon_name, common_name: o.common_name, photo_url: o.photo_url,
+      };
     }
-  } catch (err) {
-    console.warn(`${prefix}: place_id fetch failed: ${err.message}`);
-  }
+  });
 
-  // --- Top 10 Rare Species (requires iNat API) ---
-  console.log(`${prefix}: fetching rare species data...`);
-  try {
-    const leafSpecies = computeLeafSpecies(allObs);
-    const speciesIds = [...leafSpecies];
+  console.log(`${prefix}: loading taxa & project species data...`);
+  const taxaMap = await fetchTaxaMap(speciesIds);
+  const projectSpeciesMap = await fetchProjectSpeciesMap(slug);
 
-    // Build a map of project obs counts per species
-    const projectObsCount = {};
-    const speciesInfo = {};
-    allObs.forEach((o) => {
-      if (!o.min_species_taxon_id || !leafSpecies.has(o.min_species_taxon_id)) return;
-      const tid = o.min_species_taxon_id;
-      projectObsCount[tid] = (projectObsCount[tid] || 0) + 1;
-      if (!speciesInfo[tid] || o.taxon_rank === "species") {
-        speciesInfo[tid] = {
-          taxon_name: o.taxon_name, common_name: o.common_name, photo_url: o.photo_url,
-        };
-      }
+  // --- First observations ---
+  const globalCounts = {};
+  const localCounts = {};
+  speciesIds.forEach((id) => {
+    if (taxaMap[id]) globalCounts[id] = taxaMap[id].observations_count || 0;
+    if (projectSpeciesMap[id]) localCounts[id] = projectSpeciesMap[id].local_obs_count;
+  });
+
+  const firstGlobalIds = new Set(
+    speciesIds.filter((id) => globalCounts[id] !== undefined && (globalCounts[id] || 0) <= (projectObsCount[id] || 0))
+  );
+  const firstLocalIds = new Set(
+    speciesIds.filter((id) => localCounts[id] !== undefined && localCounts[id] !== null && (localCounts[id] || 0) <= (projectObsCount[id] || 0))
+  );
+
+  const allFirstIds = new Set([...firstGlobalIds, ...firstLocalIds]);
+  stats.first_observations = [...allFirstIds]
+    .map((id) => ({
+      taxon_id: id,
+      taxon_name: speciesInfo[id]?.taxon_name || "Unknown",
+      common_name: speciesInfo[id]?.common_name || null,
+      photo_url: speciesInfo[id]?.photo_url || null,
+      global_obs_count: globalCounts[id] || 0,
+      local_obs_count: localCounts[id] ?? null,
+      project_obs_count: projectObsCount[id] || 0,
+      first_global_obs: firstGlobalIds.has(id),
+      first_local_obs: firstLocalIds.has(id),
+    }))
+    .sort((a, b) => {
+      if (a.first_global_obs !== b.first_global_obs) return a.first_global_obs ? -1 : 1;
+      return (a.global_obs_count || 0) - (b.global_obs_count || 0);
     });
 
-    // Batch-fetch global observation counts from iNat API (30 IDs per request)
-    const globalCounts = {};
-    const globalConservation = {};
-    const iucnNumToCode = { 50: "CR", 40: "EN", 30: "VU", 20: "NT", 10: "LC" };
-    const BATCH_SIZE = 30;
-    for (let i = 0; i < speciesIds.length; i += BATCH_SIZE) {
-      const batch = speciesIds.slice(i, i + BATCH_SIZE);
-      const data = await rateLimitedFetch(`${API_BASE}/taxa/${batch.join(",")}`);
-      if (data.results) {
-        data.results.forEach((t) => {
-          globalCounts[t.id] = t.observations_count || 0;
-          // Global IUCN conservation status
-          if (t.conservation_status && t.conservation_status.status) {
-            globalConservation[t.id] = {
-              status: t.conservation_status.status.toUpperCase(),
-              status_name: t.conservation_status.status_name || t.conservation_status.status,
-            };
-          }
-        });
-      }
-      if (i + BATCH_SIZE < speciesIds.length) {
-        console.log(`${prefix}: fetching taxa ${Math.min(i + BATCH_SIZE, speciesIds.length)}/${speciesIds.length}...`);
-      }
-    }
+  // --- Endangered species (from cnc_taxa) ---
+  const severityOrder = { CR: 0, EN: 1, VU: 2, NT: 3 };
+  const endangeredList = speciesIds
+    .filter((id) => taxaMap[id] && taxaMap[id].conservation_status && taxaMap[id].conservation_status !== "LC")
+    .map((id) => ({
+      taxon_id: id,
+      taxon_name: speciesInfo[id]?.taxon_name || "Unknown",
+      common_name: speciesInfo[id]?.common_name || null,
+      photo_url: speciesInfo[id]?.photo_url || null,
+      status: taxaMap[id].conservation_status,
+      status_name: taxaMap[id].conservation_status_name,
+      project_obs_count: projectObsCount[id] || 0,
+    }));
+  endangeredList.sort((a, b) => (severityOrder[a.status] ?? 99) - (severityOrder[b.status] ?? 99));
 
-    // Collect first global observations (global count <= project count)
-    const firstGlobalIds = new Set(
-      speciesIds.filter((id) => globalCounts[id] !== undefined && (globalCounts[id] || 0) <= (projectObsCount[id] || 0))
-    );
+  stats.endangered_species = {
+    total: endangeredList.length,
+    species: endangeredList,
+  };
 
-    // Build globally endangered species list
-    const severityOrder = { CR: 0, EN: 1, VU: 2, NT: 3 };
-    const globalEndangeredList = speciesIds
-      .filter((id) => globalConservation[id] && globalConservation[id].status !== "LC")
-      .map((id) => ({
-        taxon_id: id,
-        taxon_name: speciesInfo[id]?.taxon_name || "Unknown",
-        common_name: speciesInfo[id]?.common_name || null,
-        photo_url: speciesInfo[id]?.photo_url || null,
-        status: globalConservation[id].status,
-        status_name: globalConservation[id].status_name,
-        project_obs_count: projectObsCount[id] || 0,
-      }));
-    globalEndangeredList.sort((a, b) => (severityOrder[a.status] ?? 99) - (severityOrder[b.status] ?? 99));
+  // --- Endemic species (from cnc_project_species) ---
+  stats.endemic_species = speciesIds
+    .filter((id) => projectSpeciesMap[id] && projectSpeciesMap[id].is_endemic)
+    .map((id) => ({
+      taxon_id: id,
+      taxon_name: speciesInfo[id]?.taxon_name || "Unknown",
+      common_name: speciesInfo[id]?.common_name || null,
+      photo_url: speciesInfo[id]?.photo_url || null,
+      obs_count: projectObsCount[id] || 0,
+    }))
+    .sort((a, b) => b.obs_count - a.obs_count);
 
-    stats.endangered_species = {
-      total: globalEndangeredList.length,
-      species: globalEndangeredList,
-    };
+  // --- Identification stats (from cnc_projects) ---
+  const { data: projectData } = await db
+    .from("cnc_projects")
+    .select("identification_stats")
+    .eq("slug", slug)
+    .single();
+  stats.identifications = projectData?.identification_stats || null;
 
-    // --- Fetch local observation counts (species rank or below only) ---
-    const localCounts = {};
-    let firstLocalIds = new Set();
-    if (placeIds.length > 0) {
-      console.log(`${prefix}: fetching local species counts...`);
-      const speciesRankIds = new Set();
-      allObs.forEach((o) => {
-        if (o.min_species_taxon_id && SPECIES_OR_BELOW.has(o.taxon_rank)) {
-          speciesRankIds.add(o.min_species_taxon_id);
-        }
-      });
-      const localSpeciesIds = speciesIds.filter((id) => speciesRankIds.has(id));
-      for (let i = 0; i < localSpeciesIds.length; i += BATCH_SIZE) {
-        const batch = localSpeciesIds.slice(i, i + BATCH_SIZE);
-        const data = await rateLimitedFetch(
-          `${API_BASE}/observations/species_counts?place_id=${placeIds.join(",")}&taxon_id=${batch.join(",")}&per_page=500`
-        );
-        if (data.results) {
-          data.results.forEach((r) => {
-            localCounts[r.taxon.id] = r.count || 0;
-          });
-        }
-        batch.forEach((id) => {
-          if (localCounts[id] === undefined) localCounts[id] = 0;
-        });
-        if (i + BATCH_SIZE < localSpeciesIds.length) {
-          console.log(`${prefix}: fetching local counts ${Math.min(i + BATCH_SIZE, localSpeciesIds.length)}/${localSpeciesIds.length}...`);
-        }
-      }
-      firstLocalIds = new Set(
-        localSpeciesIds.filter((id) => (localCounts[id] || 0) <= (projectObsCount[id] || 0))
-      );
-    }
-
-    // --- Build unified first observations list ---
-    const allFirstIds = new Set([...firstGlobalIds, ...firstLocalIds]);
-    stats.first_observations = [...allFirstIds]
-      .map((id) => ({
-        taxon_id: id,
-        taxon_name: speciesInfo[id]?.taxon_name || "Unknown",
-        common_name: speciesInfo[id]?.common_name || null,
-        photo_url: speciesInfo[id]?.photo_url || null,
-        global_obs_count: globalCounts[id] || 0,
-        local_obs_count: localCounts[id] ?? null,
-        project_obs_count: projectObsCount[id] || 0,
-        first_global_obs: firstGlobalIds.has(id),
-        first_local_obs: firstLocalIds.has(id),
-      }))
-      .sort((a, b) => {
-        // First global obs first, then first local obs; within each group sort by global count ascending
-        if (a.first_global_obs !== b.first_global_obs) return a.first_global_obs ? -1 : 1;
-        return (a.global_obs_count || 0) - (b.global_obs_count || 0);
-      });
-  } catch (err) {
-    console.warn(`${prefix}: rare species fetch failed: ${err.message}`);
-    stats.first_observations = [];
-    stats.endangered_species = { total: 0, species: [] };
-  }
-
-  // --- Endemic species (requires iNat API + place_ids) ---
-  try {
-    if (placeIds.length > 0) {
-      console.log(`${prefix}: fetching endemic species...`);
-      const leafSpecies = computeLeafSpecies(allObs);
-      const speciesIds = [...leafSpecies];
-      const projectObsCount = {};
-      const speciesInfo = {};
-      allObs.forEach((o) => {
-        if (!o.min_species_taxon_id || !leafSpecies.has(o.min_species_taxon_id)) return;
-        const tid = o.min_species_taxon_id;
-        projectObsCount[tid] = (projectObsCount[tid] || 0) + 1;
-        if (!speciesInfo[tid] || o.taxon_rank === "species") {
-          speciesInfo[tid] = { taxon_name: o.taxon_name, common_name: o.common_name, photo_url: o.photo_url };
-        }
-      });
-
-      // Fetch endemic species for the place
-      const endemicSet = new Set();
-      let endemicPage = 1;
-      let endemicTotal = 0;
-      do {
-        const data = await rateLimitedFetch(
-          `${API_BASE}/observations/species_counts?project_id=${slug}&endemic=true&per_page=500&page=${endemicPage}`
-        );
-        if (data.results) {
-          data.results.forEach((r) => {
-            if (r.taxon && leafSpecies.has(r.taxon.id)) {
-              endemicSet.add(r.taxon.id);
-            }
-          });
-        }
-        endemicTotal = data.total_results || 0;
-        endemicPage++;
-      } while ((endemicPage - 1) * 500 < endemicTotal);
-
-      stats.endemic_species = [...endemicSet].map((id) => ({
-        taxon_id: id,
-        taxon_name: speciesInfo[id]?.taxon_name || "Unknown",
-        common_name: speciesInfo[id]?.common_name || null,
-        photo_url: speciesInfo[id]?.photo_url || null,
-        obs_count: projectObsCount[id] || 0,
-      })).sort((a, b) => b.obs_count - a.obs_count);
-    } else {
-      stats.endemic_species = [];
-    }
-  } catch (err) {
-    console.warn(`${prefix}: endemic species fetch failed: ${err.message}`);
-    stats.endemic_species = [];
-  }
-
-  // --- Identification stats (requires iNat API) ---
-  try {
-    stats.identifications = await fetchIdentificationStats(slug, prefix);
-  } catch (err) {
-    console.warn(`${prefix}: identifications fetch failed: ${err.message}`);
-    stats.identifications = null;
-  }
-
+  // --- Write computed stats ---
   if (!dryRun) {
     const { error } = await db
       .from("cnc_projects")
@@ -509,36 +327,25 @@ async function main() {
   } else {
     const { data, error } = await db
       .from("cnc_projects")
-      .select("slug, total_observations")
+      .select("slug, total_observations, synced_at, computed_at")
       .order("total_observations", { ascending: false, nullsFirst: false });
 
     if (error) throw new Error(`Fetch projects: ${error.message}`);
     projects = data;
   }
 
-  const MAX_CONSOLIDATIONS = 25;
-  console.log(`\nConsolidating ${projects.length} projects (max ${MAX_CONSOLIDATIONS} with changes)...\n`);
+  console.log(`\nConsolidating ${projects.length} projects...\n`);
 
   let consolidated = 0;
   for (let i = 0; i < projects.length; i++) {
     const project = projects[i];
     const prefix = `[${i + 1}/${projects.length}] ${project.slug}`;
 
-    // Hit the cap — stop early
-    if (!singleProject && consolidated >= MAX_CONSOLIDATIONS) {
-      console.log(`${prefix}: reached ${MAX_CONSOLIDATIONS} consolidations, stopping`);
-      break;
-    }
-
-    // Skip if no new data (unless single project or --force)
+    // Skip if already up to date (unless --force or single project)
     if (!singleProject && !forceConsolidate) {
-      const { count } = await db
-        .from("cnc_observations")
-        .select("*", { count: "exact", head: true })
-        .eq("project_slug", project.slug);
-
-      if (count === (project.total_observations ?? 0)) {
-        console.log(`${prefix}: no new data (${count} obs), skipping`);
+      if (project.computed_at && project.synced_at &&
+          new Date(project.computed_at) >= new Date(project.synced_at)) {
+        console.log(`${prefix}: up to date, skipping`);
         continue;
       }
     }

@@ -11,6 +11,8 @@ create table cnc_projects (
   total_observations int default 0,
   top_observers jsonb,
   top_species jsonb,
+  place_ids jsonb,
+  identification_stats jsonb,
   computed_stats jsonb,
   computed_at timestamptz,
   synced_at timestamptz
@@ -55,3 +57,28 @@ create table cnc_sync_log (
   started_at timestamptz,
   completed_at timestamptz
 );
+
+-- Taxa cache (shared across projects)
+create table cnc_taxa (
+  taxon_id int primary key,
+  observations_count int default 0,
+  conservation_status text,
+  conservation_status_name text,
+  synced_at timestamptz
+);
+
+-- Per-project species data (local counts, endemic flag)
+create table cnc_project_species (
+  project_slug text not null,
+  taxon_id int not null,
+  local_obs_count int,
+  is_endemic boolean default false,
+  synced_at timestamptz,
+  primary key (project_slug, taxon_id)
+);
+
+create index idx_cnc_project_species_slug on cnc_project_species(project_slug);
+
+-- Migration: add columns to cnc_projects
+-- alter table cnc_projects add column place_ids jsonb;
+-- alter table cnc_projects add column identification_stats jsonb;
