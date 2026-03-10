@@ -287,14 +287,6 @@ async function consolidateProject(slug, index, total) {
     }))
     .sort((a, b) => b.obs_count - a.obs_count);
 
-  // --- Identification stats (from cnc_projects) ---
-  const { data: projectData } = await db
-    .from("cnc_projects")
-    .select("identification_stats")
-    .eq("slug", slug)
-    .single();
-  stats.identifications = projectData?.identification_stats || null;
-
   // --- Write computed stats ---
   if (!dryRun) {
     const { error } = await db

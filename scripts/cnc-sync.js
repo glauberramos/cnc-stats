@@ -24,7 +24,6 @@ const updatedSinceOverride = args.find((a) => a.startsWith("--updated-since="))?
 const refreshProjects = args.includes("--refresh-projects");
 const onlyTaxa = args.includes("--only-taxa");
 const onlyLocalCounts = args.includes("--only-local-counts");
-const onlyIdentifications = args.includes("--only-identifications");
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
   console.error("Missing SUPABASE_URL or SUPABASE_KEY. Copy .env.example to .env and fill in values.");
@@ -365,52 +364,6 @@ async function syncProject(projectSlug, index, total) {
   return 0;
 }
 
-// ─── Step 3: Fetch aggregate stats per project ───
-async function syncProjectStats(project, index, total) {
-  const prefix = `[${index}/${total}] ${project.slug}`;
-  process.stdout.write(`${prefix}: fetching stats...\r`);
-
-  const [observersData, speciesData] = await Promise.all([
-    rateLimitedFetch(
-      `${API_BASE}/observations/observers?project_id=${project.slug}&per_page=10`
-    ),
-    rateLimitedFetch(
-      `${API_BASE}/observations/species_counts?project_id=${project.slug}&per_page=10&rank=species`
-    ),
-  ]);
-
-  await new Promise((r) => setTimeout(r, 1000));
-
-  const topObservers = (observersData.results || []).map((r) => ({
-    login: r.user.login,
-    icon: r.user.icon,
-    observation_count: r.observation_count,
-    species_count: r.species_count,
-  }));
-
-  const topSpecies = (speciesData.results || []).map((r) => ({
-    taxon_id: r.taxon.id,
-    name: r.taxon.name,
-    common_name: r.taxon.preferred_common_name,
-    iconic_taxon_name: r.taxon.iconic_taxon_name,
-    photo_url: r.taxon.default_photo ? r.taxon.default_photo.square_url : null,
-    count: r.count,
-  }));
-
-  if (!dryRun) {
-    const { error } = await db
-      .from("cnc_projects")
-      .update({
-        top_observers: topObservers,
-        top_species: topSpecies,
-      })
-      .eq("slug", project.slug);
-
-    if (error) console.warn(`  Stats update error for ${project.slug}: ${error.message}`);
-  }
-
-  console.log(`${prefix}: ${topObservers.length} observers, ${topSpecies.length} species`);
-}
 
 // ─── Step 4: Sync taxa data to cnc_taxa ───
 async function syncTaxa(projects) {
@@ -590,60 +543,7 @@ async function syncLocalCountsAndEndemics(projects) {
   console.log(`\n=== Local counts & endemic sync complete ===`);
 }
 
-// ─── Step 6: Sync identification stats ───
-async function syncIdentificationStats(projects) {
-  console.log(`\n=== Step 6: Syncing identification stats ===\n`);
 
-  for (let i = 0; i < projects.length; i++) {
-    const project = projects[i];
-    const prefix = `[${i + 1}/${projects.length}] ${project.slug}`;
-
-    try {
-      const [catData, identifiersData] = await Promise.all([
-        rateLimitedFetch(`${API_BASE}/observations/identification_categories?project_id=${project.slug}`),
-        rateLimitedFetch(`${API_BASE}/observations/identifiers?project_id=${project.slug}&per_page=10`),
-      ]);
-
-      await new Promise((r) => setTimeout(r, 1000));
-
-      const idCounts = { improving: 0, supporting: 0, leading: 0, maverick: 0 };
-      let totalIds = 0;
-      for (const result of catData.results || []) {
-        if (result.category in idCounts) {
-          idCounts[result.category] = result.count || 0;
-          totalIds += idCounts[result.category];
-        }
-      }
-
-      const topIdentifiers = (identifiersData.results || []).map((r) => ({
-        login: r.user?.login || "?",
-        icon: r.user?.icon_url || r.user?.icon || "",
-        count: r.count || 0,
-      }));
-
-      const identificationStats = {
-        total: totalIds,
-        total_identifiers: identifiersData.total_results || 0,
-        top_identifiers: topIdentifiers,
-        ...idCounts,
-      };
-
-      if (!dryRun) {
-        const { error } = await db
-          .from("cnc_projects")
-          .update({ identification_stats: identificationStats })
-          .eq("slug", project.slug);
-        if (error) console.warn(`  ${prefix}: update error: ${error.message}`);
-      }
-
-      console.log(`${prefix}: ${totalIds} IDs, ${topIdentifiers.length} top identifiers`);
-    } catch (err) {
-      console.warn(`${prefix}: identification stats failed: ${err.message}`);
-    }
-  }
-
-  console.log(`\n=== Identification stats sync complete ===`);
-}
 
 // ─── Main ───
 async function main() {
@@ -695,10 +595,9 @@ async function main() {
   }
 
   // Handle targeted runs (--only-* flags)
-  if (onlyTaxa || onlyLocalCounts || onlyIdentifications) {
+  if (onlyTaxa || onlyLocalCounts) {
     if (onlyTaxa) await syncTaxa(projects);
     if (onlyLocalCounts) await syncLocalCountsAndEndemics(projects);
-    if (onlyIdentifications) await syncIdentificationStats(projects);
 
     if (!dryRun) {
       for (const p of projects) {
@@ -720,21 +619,11 @@ async function main() {
     console.log(`\n=== Observations sync complete: ${totalSynced.toLocaleString()} total ===`);
   }
 
-  // Step 3: Fetch aggregate stats
-  console.log(`\n=== Step 3: Fetching aggregate stats for ${projects.length} projects ===`);
-  for (let i = 0; i < projects.length; i++) {
-    await syncProjectStats(projects[i], i + 1, projects.length);
-  }
-  console.log(`\n=== Stats sync complete ===`);
-
-  // Step 4: Sync taxa
+  // Step 3: Sync taxa
   await syncTaxa(projects);
 
-  // Step 5: Sync local counts & endemic species
+  // Step 4: Sync local counts & endemic species
   await syncLocalCountsAndEndemics(projects);
-
-  // Step 6: Sync identification stats
-  await syncIdentificationStats(projects);
 
   // Update synced_at for all processed projects
   if (!dryRun) {
