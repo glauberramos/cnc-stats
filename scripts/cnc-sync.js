@@ -365,7 +365,7 @@ async function syncProject(projectSlug, index, total) {
 }
 
 
-// ─── Step 4: Sync taxa data to cnc_taxa ───
+// ─── Step 3: Sync taxa data to cnc_taxa ───
 async function syncTaxa(projects) {
   console.log(`\n=== Step 4: Syncing taxa data ===\n`);
 
