@@ -21,7 +21,7 @@ const statsOnly = args.includes("--stats-only");
 const dryRun = args.includes("--dry-run");
 const fullSync = args.includes("--full");
 const updatedSinceOverride = args.find((a) => a.startsWith("--updated-since="))?.split("=")[1];
-const skipProjects = args.includes("--skip-projects");
+const refreshProjects = args.includes("--refresh-projects");
 const onlyTaxa = args.includes("--only-taxa");
 const onlyLocalCounts = args.includes("--only-local-counts");
 const onlyIdentifications = args.includes("--only-identifications");
@@ -143,18 +143,33 @@ async function fetchProjects() {
     console.log(`  Fetched ${Math.min(i + PROJECT_BATCH_SIZE, projectIds.length)}/${projectIds.length} project details`);
   }
 
-  // Get observation count for each project (to sort by size)
-  console.log(`\nFetching observation counts...`);
-  for (let i = 0; i < projects.length; i++) {
-    const p = projects[i];
-    const countData = await rateLimitedFetch(
-      `${API_BASE}/observations?project_id=${p.slug}&per_page=1`
-    );
-    p.total_observations = countData.total_results || 0;
-    if ((i + 1) % 50 === 0 || i === projects.length - 1) {
-      console.log(`  Counted ${i + 1}/${projects.length} projects`);
+  // Get existing observation counts from Supabase (avoid 664 API calls)
+  console.log(`\nLoading existing observation counts from Supabase...`);
+  const existingCounts = {};
+  const { data: existingProjects } = await db
+    .from("cnc_projects")
+    .select("slug, total_observations");
+  if (existingProjects) {
+    existingProjects.forEach((p) => { existingCounts[p.slug] = p.total_observations || 0; });
+  }
+
+  // Only fetch counts from API for new projects not yet in Supabase
+  const newProjects = projects.filter((p) => existingCounts[p.slug] === undefined);
+  if (newProjects.length > 0) {
+    console.log(`Fetching observation counts for ${newProjects.length} new projects...`);
+    for (let i = 0; i < newProjects.length; i++) {
+      const p = newProjects[i];
+      const countData = await rateLimitedFetch(
+        `${API_BASE}/observations?project_id=${p.slug}&per_page=1`
+      );
+      existingCounts[p.slug] = countData.total_results || 0;
+      if ((i + 1) % 50 === 0 || i === newProjects.length - 1) {
+        console.log(`  Counted ${i + 1}/${newProjects.length} new projects`);
+      }
     }
   }
+
+  projects.forEach((p) => { p.total_observations = existingCounts[p.slug] || 0; });
 
   // Sort by size ascending
   projects.sort((a, b) => a.total_observations - b.total_observations);
@@ -639,9 +654,18 @@ async function main() {
   if (singleProject) console.log(`Single project: ${singleProject}`);
   console.log("");
 
-  // Step 1: Fetch/update full project list from iNat
-  if (!singleProject && !skipProjects) {
-    await fetchProjects();
+  // Step 1: Seed project list from iNat (only if Supabase is empty or --refresh-projects)
+  if (!singleProject) {
+    const { count } = await db
+      .from("cnc_projects")
+      .select("*", { count: "exact", head: true });
+
+    if (refreshProjects || !count || count === 0) {
+      console.log(count === 0 ? "No projects in Supabase, seeding from iNat..." : "Refreshing project list from iNat...");
+      await fetchProjects();
+    } else {
+      console.log(`Using ${count} projects from Supabase`);
+    }
   }
 
   if (projectsOnly) {

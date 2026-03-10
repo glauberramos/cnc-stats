@@ -23,4 +23,4 @@ jobs:
         run: npm install dotenv @supabase/supabase-js
 
       - name: Sync projects
-        run: node scripts/cnc-sync.js --skip-projects
+        run: node scripts/cnc-sync.js
