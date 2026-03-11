@@ -362,10 +362,20 @@
         const title = project ? project.title : slug;
         const projectUrl = `https://www.inaturalist.org/projects/${slug}`;
 
+        let dateRange = "";
+        if (project && project.search_parameters) {
+          const d1 = project.search_parameters.find(p => p.field === "d1");
+          const d2 = project.search_parameters.find(p => p.field === "d2");
+          if (d1 && d2) {
+            const fmt = (d) => new Date(d + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" });
+            dateRange = `<p style="color:#888;font-size:0.9rem;margin-top:4px">${fmt(d1.value)} – ${fmt(d2.value)}, 2025</p>`;
+          }
+        }
+
         header.innerHTML = `
           <img src="CNC_Logo_Grayscale.png" alt="City Nature Challenge" class="header-logo light" />
           <img src="CNC_Logo_Knockout.png" alt="City Nature Challenge" class="header-logo dark" />
-          <h1>${title}</h1>
+          <h1>${title}</h1>${dateRange}
           <p style="margin-top:2px;margin-bottom:16px"><a href="${projectUrl}" target="_blank">View on iNaturalist \u2192</a></p>
         `;
 
