@@ -91,6 +91,22 @@
       body.dark-mode .search-box:focus { border-color: #4a8c50; }
       .no-results { text-align: center; padding: 30px; color: #888; font-size: 0.95rem; }
 
+      /* Stats bar */
+      .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+      .stat-card {
+        background: white; border-radius: 14px; padding: 18px 20px;
+        text-align: center; border: 1px solid #e0e0e0;
+      }
+      .stat-card .stat-value { font-size: 2rem; font-weight: 900; color: #2E7D32; }
+      .stat-card .stat-label { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+      body.dark-mode .stat-card { background: #2d2d2d; border-color: #444; }
+      body.dark-mode .stat-card .stat-value { color: #6abf69; }
+      body.dark-mode .stat-card .stat-label { color: #999; }
+      @media (max-width: 480px) {
+        .stats-bar { grid-template-columns: repeat(2, 1fr); }
+        .stat-card .stat-value { font-size: 1.4rem; }
+      }
+
       /* Footer */
       .site-footer {
         background: #1a1a1a; margin-top: 60px; padding: 40px 20px; text-align: center;
@@ -107,6 +123,16 @@
         <h1>2025</h1>
         <p id="subtitle">Participating cities</p>
       </header>
+      <div id="statsBar" class="stats-bar">
+        <div class="stat-card"><div class="skeleton-bar" style="width:60%;height:28px;margin:0 auto 8px"></div><div class="skeleton-bar" style="width:80%;height:10px;margin:0 auto"></div></div>
+        <div class="stat-card"><div class="skeleton-bar" style="width:50%;height:28px;margin:0 auto 8px"></div><div class="skeleton-bar" style="width:70%;height:10px;margin:0 auto"></div></div>
+        <div class="stat-card"><div class="skeleton-bar" style="width:40%;height:28px;margin:0 auto 8px"></div><div class="skeleton-bar" style="width:90%;height:10px;margin:0 auto"></div></div>
+        <div class="stat-card"><div class="skeleton-bar" style="width:45%;height:28px;margin:0 auto 8px"></div><div class="skeleton-bar" style="width:75%;height:10px;margin:0 auto"></div></div>
+        <div class="stat-card"><div class="skeleton-bar" style="width:55%;height:28px;margin:0 auto 8px"></div><div class="skeleton-bar" style="width:85%;height:10px;margin:0 auto"></div></div>
+        <div class="stat-card"><div class="skeleton-bar" style="width:35%;height:28px;margin:0 auto 8px"></div><div class="skeleton-bar" style="width:90%;height:10px;margin:0 auto"></div></div>
+        <div class="stat-card"><div class="skeleton-bar" style="width:50%;height:28px;margin:0 auto 8px"></div><div class="skeleton-bar" style="width:70%;height:10px;margin:0 auto"></div></div>
+        <div class="stat-card"><div class="skeleton-bar" style="width:45%;height:28px;margin:0 auto 8px"></div><div class="skeleton-bar" style="width:80%;height:10px;margin:0 auto"></div></div>
+      </div>
       <input type="text" id="searchBox" class="search-box" placeholder="Search cities..." oninput="onSearch(this.value)" />
       <div id="projectList" class="project-list">
         <div class="skeleton-item"><div class="skeleton-icon"></div><div class="skeleton-info"><div class="skeleton-bar" style="width:60%;height:14px"></div><div class="skeleton-bar" style="width:40%;height:10px"></div></div><div class="skeleton-bar" style="width:60px;height:14px"></div></div>
@@ -216,6 +242,42 @@
       }
 
       loadPage();
+
+      // Fetch umbrella project stats from iNat API
+      async function fetchUmbrellaStats() {
+        const slug = "city-nature-challenge-2025";
+        const api = "https://api.inaturalist.org/v1";
+        const baseUrl = `https://www.inaturalist.org/observations?project_id=${slug}&verifiable=any`;
+        try {
+          const [obsData, speciesData, observersData, rgData, identifiersData] = await Promise.all([
+            fetch(`${api}/observations?project_id=${slug}&per_page=0`).then(r => r.json()),
+            fetch(`${api}/observations/species_counts?project_id=${slug}&per_page=0`).then(r => r.json()),
+            fetch(`${api}/observations/observers?project_id=${slug}&per_page=0`).then(r => r.json()),
+            fetch(`${api}/observations?project_id=${slug}&quality_grade=research&per_page=0`).then(r => r.json()),
+            fetch(`${api}/observations/identifiers?project_id=${slug}&per_page=0`).then(r => r.json()),
+          ]);
+          const s = {
+            total_observations: obsData.total_results || 0,
+            total_species: speciesData.total_results || 0,
+            total_observers: observersData.total_results || 0,
+            research_grade: rgData.total_results || 0,
+            total_identifiers: identifiersData.total_results || 0,
+          };
+          document.getElementById("statsBar").innerHTML = `
+            <a class="stat-card" href="${baseUrl}" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${s.total_observations.toLocaleString()}</div><div class="stat-label">📷 Observations</div></a>
+            <a class="stat-card" href="${baseUrl}&view=species" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${s.total_species.toLocaleString()}</div><div class="stat-label">🌿 Species</div></a>
+            <div class="stat-card"><div class="stat-value">${s.total_observations > 0 ? Math.round((s.total_species / s.total_observations) * 100) : 0}%</div><div class="stat-label">🧬 Species/Obs Ratio</div></div>
+            <div class="stat-card"><div class="stat-value">${s.total_observers > 0 ? (s.total_observations / s.total_observers).toFixed(1) : 0}</div><div class="stat-label">📊 Obs/Person</div></div>
+            <a class="stat-card" href="${baseUrl}&quality_grade=research" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${s.research_grade.toLocaleString()}</div><div class="stat-label">✅ Research Grade</div></a>
+            <div class="stat-card"><div class="stat-value">${s.total_observations > 0 ? Math.round(s.research_grade / s.total_observations * 100) : 0}%</div><div class="stat-label">✅ Research Grade Rate</div></div>
+            <a class="stat-card" href="${baseUrl}&view=observers" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${s.total_observers.toLocaleString()}</div><div class="stat-label">👥 Observers</div></a>
+            <a class="stat-card" href="${baseUrl}&view=identifiers" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${s.total_identifiers.toLocaleString()}</div><div class="stat-label">🔍 Identifiers</div></a>
+          `;
+        } catch (e) {
+          console.error("Failed to fetch umbrella stats:", e);
+        }
+      }
+      fetchUmbrellaStats();
     </script>
   </body>
 </html>
