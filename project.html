@@ -185,10 +185,11 @@
       @media (max-width: 480px) {
         body { padding: 20px 12px; }
         .back-button { font-size: 0.8rem; padding: 8px 12px; top: 10px; left: 10px; }
-        .stats-bar { grid-template-columns: 1fr; }
+        .stats-bar { grid-template-columns: repeat(2, 1fr); }
         .project-header-content { flex-direction: column; gap: 10px; }
         .map-subtitle { font-size: 0.85rem; }
         .highlight-card { padding: 14px; }
+        .species-list-item .sli-tags { width: 100%; margin-left: 50px; margin-top: -4px; }
       }
 
       /* Dark mode */
@@ -850,7 +851,7 @@
                   + '<div class="sli-name">' + name + '</div>'
                   + (sci && sci !== name ? '<div class="sli-sci">' + sci + '</div>' : '')
                   + '</div>'
-                  + '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'
+                  + '<div class="sli-tags" style="display:flex;align-items:center;gap:6px;flex-shrink:0">'
                   + (s.first_global_obs ? '<span style="background:linear-gradient(135deg,#FFD700,#FFA000);color:#333;font-size:0.7rem;font-weight:700;padding:3px 8px;border-radius:10px;white-space:nowrap;box-shadow:0 1px 3px rgba(255,160,0,0.3)">\u2B50 1st global</span>' : '')
                   + (s.first_local_obs ? '<span style="background:linear-gradient(135deg,#4CAF50,#2E7D32);color:#fff;font-size:0.7rem;font-weight:700;padding:3px 8px;border-radius:10px;white-space:nowrap;box-shadow:0 1px 3px rgba(46,125,50,0.3)">\u{1F4CD} 1st local</span>' : '')
                   + '<span class="sli-badge">' + (s.global_obs_count || 0) + ' global' + (s.local_obs_count != null ? ' \u00B7 ' + s.local_obs_count + ' local' : '') + '</span>'
@@ -872,7 +873,7 @@
             + '<div class="sli-name">' + name + '</div>'
             + (sci && sci !== name ? '<div class="sli-sci">' + sci + '</div>' : '')
             + '</div>'
-            + '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'
+            + '<div class="sli-tags" style="display:flex;align-items:center;gap:6px;flex-shrink:0">'
             + '<span style="background:' + color + ';color:#fff;font-size:0.7rem;font-weight:700;padding:3px 8px;border-radius:10px;white-space:nowrap">' + s.status + '</span>'
             + '<span class="sli-badge">' + s.project_obs_count + ' obs</span>'
             + '</div></a>';
