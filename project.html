@@ -190,6 +190,8 @@
         .map-subtitle { font-size: 0.85rem; }
         .highlight-card { padding: 14px; }
         .species-list-item .sli-tags { width: 100%; margin-left: 50px; margin-top: -4px; }
+        .highlight-card h3 { flex-wrap: wrap; }
+        .last-updated { width: 100%; margin-left: 0 !important; margin-top: 2px; }
       }
 
       /* Dark mode */
@@ -800,7 +802,7 @@
         // === Build HTML ===
         let html = "";
         const lastUpdated = computedAt
-          ? `<span style="font-size:0.7rem;font-weight:400;color:#999;margin-left:8px">Updated ${new Date(computedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span>`
+          ? `<span class="last-updated" style="font-size:0.7rem;font-weight:400;color:#999;margin-left:8px">Updated ${new Date(computedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span>`
           : "";
 
         // Data (live from iNat API)
