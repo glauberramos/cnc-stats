@@ -121,7 +121,7 @@
         <img src="CNC_Logo_Grayscale.png" alt="City Nature Challenge" class="header-logo light" />
         <img src="CNC_Logo_Knockout.png" alt="City Nature Challenge" class="header-logo dark" />
         <h1>2025</h1>
-        <p id="subtitle">Participating cities</p>
+        <p id="subtitle">Participating projects</p>
       </header>
       <div id="statsBar" class="stats-bar">
         <div class="stat-card"><div class="skeleton-bar" style="width:60%;height:28px;margin:0 auto 8px"></div><div class="skeleton-bar" style="width:80%;height:10px;margin:0 auto"></div></div>
@@ -133,7 +133,7 @@
         <div class="stat-card"><div class="skeleton-bar" style="width:50%;height:28px;margin:0 auto 8px"></div><div class="skeleton-bar" style="width:70%;height:10px;margin:0 auto"></div></div>
         <div class="stat-card"><div class="skeleton-bar" style="width:45%;height:28px;margin:0 auto 8px"></div><div class="skeleton-bar" style="width:80%;height:10px;margin:0 auto"></div></div>
       </div>
-      <input type="text" id="searchBox" class="search-box" placeholder="Search cities..." oninput="onSearch(this.value)" />
+      <input type="text" id="searchBox" class="search-box" placeholder="Search projects..." oninput="onSearch(this.value)" />
       <div id="projectList" class="project-list">
         <div class="skeleton-item"><div class="skeleton-icon"></div><div class="skeleton-info"><div class="skeleton-bar" style="width:60%;height:14px"></div><div class="skeleton-bar" style="width:40%;height:10px"></div></div><div class="skeleton-bar" style="width:60px;height:14px"></div></div>
         <div class="skeleton-item"><div class="skeleton-icon"></div><div class="skeleton-info"><div class="skeleton-bar" style="width:70%;height:14px"></div><div class="skeleton-bar" style="width:35%;height:10px"></div></div><div class="skeleton-bar" style="width:60px;height:14px"></div></div>
@@ -196,7 +196,7 @@
           if (loaded === 0) {
             document.getElementById("projectList").innerHTML =
               searchQuery
-                ? `<div class="no-results">No cities found for "${searchQuery}"</div>`
+                ? `<div class="no-results">No projects found for "${searchQuery}"</div>`
                 : '<div class="loading">No projects found.</div>';
           }
           const btn = document.getElementById("loadMoreBtn");
@@ -206,7 +206,7 @@
 
         if (loaded === 0) {
           totalCount = count || data.length;
-          document.getElementById("subtitle").textContent = `${totalCount} participating cities`;
+          document.getElementById("subtitle").textContent = `${totalCount} participating projects`;
           document.getElementById("projectList").innerHTML = "";
         }
 
