@@ -514,7 +514,7 @@
           <a class="stat-card" href="${baseUrl}&quality_grade=research" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${s.research_grade.toLocaleString()}</div><div class="stat-label">✅ Research Grade</div></a>
           <div class="stat-card"><div class="stat-value">${s.total_observations > 0 ? Math.round(s.research_grade / s.total_observations * 100) : 0}%</div><div class="stat-label">✅ Research Grade Rate</div></div>
           <a class="stat-card" href="${baseUrl}&view=observers" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${s.total_observers.toLocaleString()}</div><div class="stat-label">👥 Observers</div></a>
-          <div class="stat-card"><div class="stat-value">${s.total_identifiers.toLocaleString()}</div><div class="stat-label">🔍 Identifiers</div></div>
+          <a class="stat-card" href="${baseUrl}&view=identifiers" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${s.total_identifiers.toLocaleString()}</div><div class="stat-label">🔍 Identifiers</div></a>
         `;
       }
 
