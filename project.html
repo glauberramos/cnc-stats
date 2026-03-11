@@ -166,10 +166,6 @@
       .stat-card .skeleton-bar { background: #e8e8e8; }
       @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
-      /* Sync status */
-      .sync-status {
-        font-size: 0.75rem; color: #999; text-align: right; margin-bottom: 16px;
-      }
 
       /* Responsive */
       @media (max-width: 900px) {
@@ -221,7 +217,6 @@
       body.dark-mode .scrollable-list::-webkit-scrollbar-thumb { background: #555; }
       body.dark-mode .scrollable-list::-webkit-scrollbar-thumb:hover { background: #777; }
       body.dark-mode .highlight-empty { color: #777; }
-      body.dark-mode .sync-status { color: #777; }
       body.dark-mode .skeleton-bar { background: #3d3d3d; }
 
       /* Footer */
@@ -252,7 +247,6 @@
           <div class="skeleton-bar" style="width:300px;height:24px;margin:0 auto"></div>
           <div class="skeleton-bar" style="width:120px;height:12px;margin:10px auto 0"></div>
         </div>
-        <div id="syncStatus"></div>
         <div id="statsBar" class="stats-bar">
           <div class="stat-card"><div class="skeleton-bar lg"></div><div class="skeleton-bar sm"></div></div>
           <div class="stat-card"><div class="skeleton-bar lg"></div><div class="skeleton-bar sm"></div></div>
@@ -364,7 +358,7 @@
           <img src="CNC_Logo_Grayscale.png" alt="City Nature Challenge" class="header-logo light" />
           <img src="CNC_Logo_Knockout.png" alt="City Nature Challenge" class="header-logo dark" />
           <h1>${title}</h1>
-          <p style="margin-top:8px"><a href="${projectUrl}" target="_blank">View on iNaturalist \u2192</a></p>
+          <p style="margin-top:2px;margin-bottom:16px"><a href="${projectUrl}" target="_blank">View on iNaturalist \u2192</a></p>
         `;
 
         document.title = `CNC: ${title}`;
@@ -492,11 +486,6 @@
         const stats = projectData && projectData.length > 0 ? projectData[0].computed_stats : null;
         const computedAt = projectData && projectData.length > 0 ? projectData[0].computed_at : null;
 
-        if (computedAt) {
-          const syncDate = new Date(computedAt).toLocaleString("en-US", { month: "long", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" });
-          document.getElementById("syncStatus").innerHTML = `<div class="sync-status">Last updated: ${syncDate}</div>`;
-        }
-
         let liveHighlights = { topSpecies: [], topIdentifiers: [], topFavorited: [], endangeredSpecies: [], endemicSpecies: [] };
         try {
           liveHighlights = await liveHighlightsPromise;
@@ -505,7 +494,7 @@
         }
 
         if (stats) {
-          renderHighlights(stats, liveHighlights);
+          renderHighlights(stats, liveHighlights, computedAt);
         }
 
         renderObservationMap(slug, liveStats || stats);
@@ -789,7 +778,7 @@
       }
 
       // ─── Highlights ───
-      function renderHighlights(stats, liveData) {
+      function renderHighlights(stats, liveData, computedAt) {
         // === Render helpers ===
         function speciesItemHtml(s, badge) {
           const name = s.common_name || s.taxon_name || "Unknown";
@@ -809,6 +798,9 @@
 
         // === Build HTML ===
         let html = "";
+        const lastUpdated = computedAt
+          ? `<span style="font-size:0.7rem;font-weight:400;color:#999;margin-left:8px">Updated ${new Date(computedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span>`
+          : "";
 
         // Data (live from iNat API)
         const topSpecies = liveData.topSpecies || [];
@@ -845,7 +837,7 @@
           <div class="map-container" id="observationMap" style="grid-template-columns: repeat(32, 1fr)"></div>
         </div>`;
         html += `<div class="highlight-card">
-          <h3>\u{2B50} First Observations <span class="highlight-count">${firstObservations.length} species</span></h3>
+          <h3>\u{2B50} First Observations <span class="highlight-count">${firstObservations.length} species</span>${lastUpdated}</h3>
           ${firstObservations.length > 0
             ? `<div class="scrollable-list">${firstObservations.map(s => {
                 const name = s.common_name || s.taxon_name || "Unknown";
@@ -945,7 +937,7 @@
             : `<div class="highlight-empty">No favorited observations</div>`}
         </div>`;
         html += `<div class="highlight-card">
-          <h3>\u{1F4AC} Most Commented <span class="highlight-count">Top 10</span></h3>
+          <h3>\u{1F4AC} Most Commented <span class="highlight-count">Top 10</span>${lastUpdated}</h3>
           ${topCommented.length > 0
             ? topCommented.map(o => obsItemHtml(o, `\u{1F4AC} ${o.comments_count || 0}`)).join("")
             : `<div class="highlight-empty">No commented observations</div>`}
