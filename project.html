@@ -391,8 +391,6 @@
 
       async function fetchLiveHighlightData(slug) {
         const api = "https://api.inaturalist.org/v1";
-        const iucnStatuses = ["CR", "EN", "VU", "NT"];
-
         async function fetchAllPages(url) {
           const perPage = 500;
           const firstPage = await fetchWithRetry(`${url}&per_page=${perPage}&page=1`).then(r => r.json());
@@ -410,33 +408,30 @@
           return allResults;
         }
 
-        const [speciesData, identifiersData, topFavedData, topCommentedData, endemicData, ...endangeredResults] = await Promise.all([
+        const [speciesData, identifiersData, topFavedData, topCommentedData, endemicData, threatenedData] = await Promise.all([
           fetchWithRetry(`${api}/observations/species_counts?project_id=${slug}&per_page=10&rank=species`).then(r => r.json()),
           fetchWithRetry(`${api}/observations/identifiers?project_id=${slug}&per_page=10`).then(r => r.json()),
           fetchWithRetry(`${api}/observations?project_id=${slug}&order_by=votes&per_page=10`).then(r => r.json()),
           fetchWithRetry(`${api}/observations?project_id=${slug}&order_by=comments_count&per_page=10`).then(r => r.json()),
           fetchAllPages(`${api}/observations/species_counts?project_id=${slug}&endemic=true&rank=species`),
-          ...iucnStatuses.map(status =>
-            fetchAllPages(`${api}/observations/species_counts?project_id=${slug}&cs=${status}&rank=species`)
-          ),
+          fetchAllPages(`${api}/observations/species_counts?project_id=${slug}&threatened=true&rank=species`),
         ]);
-        const endangeredSpecies = [];
-        iucnStatuses.forEach((status, i) => {
-          (endangeredResults[i] || []).forEach(r => {
-            endangeredSpecies.push({
+        const statusOrder = { CR: 0, EN: 1, VU: 2, NT: 3 };
+        const endangeredSpecies = (threatenedData || [])
+          .map(r => {
+            const cs = r.taxon.conservation_status;
+            const status = cs ? cs.status.toUpperCase() : null;
+            return {
               taxon_id: r.taxon.id,
               taxon_name: r.taxon.name,
               common_name: r.taxon.preferred_common_name || null,
               photo_url: r.taxon.default_photo ? r.taxon.default_photo.square_url.replace("square", "small") : null,
               status: status,
               project_obs_count: r.count,
-            });
-          });
-        });
-        endangeredSpecies.sort((a, b) => {
-          const order = { CR: 0, EN: 1, VU: 2, NT: 3 };
-          return (order[a.status] - order[b.status]) || (b.project_obs_count - a.project_obs_count);
-        });
+            };
+          })
+          .filter(s => s.status && s.status in statusOrder)
+          .sort((a, b) => (statusOrder[a.status] - statusOrder[b.status]) || (b.project_obs_count - a.project_obs_count));
 
         function mapObs(o) {
           const photo = o.photos && o.photos[0] ? o.photos[0].url.replace("square", "small") : null;
