@@ -494,6 +494,7 @@ async function syncLocalCountsAndEndemics(projects) {
 
     // Batch-fetch local counts
     const localCounts = {};
+    console.log(`${prefix}: fetching local counts for ${localSpeciesIds.length} species...`);
     for (let i = 0; i < localSpeciesIds.length; i += TAXA_BATCH_SIZE) {
       const batch = localSpeciesIds.slice(i, i + TAXA_BATCH_SIZE);
       const data = await rateLimitedFetch(
@@ -507,8 +508,10 @@ async function syncLocalCountsAndEndemics(projects) {
       batch.forEach((id) => {
         if (localCounts[id] === undefined) localCounts[id] = 0;
       });
+      console.log(`${prefix}: local counts ${Math.min(i + TAXA_BATCH_SIZE, localSpeciesIds.length)}/${localSpeciesIds.length}`);
     }
 
+    console.log(`${prefix}: fetching endemic species...`);
     // Fetch endemic species
     const endemicSet = new Set();
     let endemicPage = 1;
