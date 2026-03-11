@@ -775,7 +775,7 @@
               }
             } catch (e) { /* ignore */ }
           }
-          mapSubtitle.innerHTML = `<div class="map-stat-card"><div class="map-stat-value">${coveragePct}%</div><div class="map-stat-label">${observedCells.size} of ${GRID_PER_TILE * GRID_PER_TILE} grid squares covered</div></div>${areaCard}`;
+          mapSubtitle.innerHTML = `<div class="map-stat-card"><div class="map-stat-value">${coveragePct}%</div><div class="map-stat-label">${observedCells.size.toLocaleString()} of ${totalLandCells.toLocaleString()} grid squares covered</div></div>${areaCard}`;
 
         } catch (err) {
           console.error("Map error:", err);
