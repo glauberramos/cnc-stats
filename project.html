@@ -521,11 +521,25 @@
 
       async function fetchLiveHighlightData(slug) {
         const api = "https://api.inaturalist.org/v1";
-        const [observersData, speciesData, identifiersData] = await Promise.all([
+        const [observersData, speciesData, identifiersData, topFavedData, topCommentedData] = await Promise.all([
           fetchWithRetry(`${api}/observations/observers?project_id=${slug}&per_page=10`).then(r => r.json()),
           fetchWithRetry(`${api}/observations/species_counts?project_id=${slug}&per_page=10&rank=species`).then(r => r.json()),
           fetchWithRetry(`${api}/observations/identifiers?project_id=${slug}&per_page=10`).then(r => r.json()),
+          fetchWithRetry(`${api}/observations?project_id=${slug}&order_by=votes&per_page=10`).then(r => r.json()),
+          fetchWithRetry(`${api}/observations?project_id=${slug}&order_by=comments_count&per_page=10`).then(r => r.json()),
         ]);
+        function mapObs(o) {
+          const photo = o.photos && o.photos[0] ? o.photos[0].url.replace("square", "small") : null;
+          return {
+            inat_id: o.id,
+            common_name: o.taxon ? o.taxon.preferred_common_name : null,
+            taxon_name: o.taxon ? o.taxon.name : null,
+            photo_url: photo,
+            user_login: o.user ? o.user.login : null,
+            faves_count: o.faves_count || 0,
+            comments_count: o.comments_count || 0,
+          };
+        }
         return {
           topObservers: (observersData.results || []).map(r => ({
             login: r.user.login, avatar: r.user.icon,
@@ -540,6 +554,8 @@
             login: r.user?.login || "?", icon: r.user?.icon_url || r.user?.icon || "",
             count: r.count || 0,
           })),
+          topFavorited: (topFavedData.results || []).map(mapObs),
+          topCommented: (topCommentedData.results || []).map(mapObs),
         };
       }
 
@@ -576,7 +592,7 @@
           document.getElementById("syncStatus").innerHTML = `<div class="sync-status">Last updated: ${syncDate}</div>`;
         }
 
-        let liveHighlights = { topObservers: [], topSpecies: [], topIdentifiers: [] };
+        let liveHighlights = { topObservers: [], topSpecies: [], topIdentifiers: [], topFavorited: [], topCommented: [] };
         try {
           liveHighlights = await liveHighlightsPromise;
         } catch (e) {
@@ -889,7 +905,7 @@
 
       // ─── Highlights ───
       function renderHighlights(stats, liveData) {
-        const mostFaved = stats.most_faved || [];
+        const mostFaved = stats.most_faved || []; // kept for fallback
 
         // === Render helpers ===
         function speciesItemHtml(s, badge) {
@@ -930,8 +946,12 @@
         const endangered = stats.endangered_species || { total: 0, species: [] };
 
         const iucnColors = { CR: "#d32f2f", EN: "#e65100", VU: "#f9a825", NT: "#1976d2" };
-        const topFavorited = [...mostFaved].sort((a, b) => (b.faves_count || 0) - (a.faves_count || 0)).slice(0, 10);
-        const topCommented = [...mostFaved].sort((a, b) => (b.comments_count || 0) - (a.comments_count || 0)).slice(0, 10);
+        const topFavorited = (liveData.topFavorited && liveData.topFavorited.length > 0)
+          ? liveData.topFavorited
+          : [...mostFaved].sort((a, b) => (b.faves_count || 0) - (a.faves_count || 0)).slice(0, 10);
+        const topCommented = (liveData.topCommented && liveData.topCommented.length > 0)
+          ? liveData.topCommented
+          : [...mostFaved].sort((a, b) => (b.comments_count || 0) - (a.comments_count || 0)).slice(0, 10);
 
         function obsItemHtml(o, badge) {
           const name = o.common_name || o.taxon_name || "Unknown";
