@@ -846,7 +846,6 @@
         </div>`;
         html += `<div class="highlight-card">
           <h3>\u{2B50} First Observations <span class="highlight-count">${firstObservations.length} species</span></h3>
-          <p style="font-size:0.85rem;color:#888;margin-bottom:12px">Species first observed globally or locally during this event</p>
           ${firstObservations.length > 0
             ? `<div class="scrollable-list">${firstObservations.map(s => {
                 const name = s.common_name || s.taxon_name || "Unknown";
@@ -891,14 +890,12 @@
         html += `<div class="highlights-grid">`;
         html += `<div class="highlight-card">
           <h3>\u{1F30D} Threatened Species <span class="highlight-count">${endangered.total} species</span></h3>
-          <p style="font-size:0.85rem;color:#888;margin-bottom:12px">Species with conservation status (IUCN or local authority)</p>
           ${endangered.species && endangered.species.length > 0
             ? `<div class="scrollable-list">${endangered.species.map(s => endangeredItemHtml(s)).join("")}</div>`
             : `<div class="highlight-empty">No endangered species found</div>`}
         </div>`;
         html += `<div class="highlight-card">
           <h3>\u{1F3DD}\uFE0F Endemic Species <span class="highlight-count">${endemicSpecies.length} species</span></h3>
-          <p style="font-size:0.85rem;color:#888;margin-bottom:12px">Species native and restricted to this region</p>
           ${endemicSpecies.length > 0
             ? `<div class="scrollable-list">${endemicSpecies.map(s => speciesItemHtml(s, s.obs_count ? s.obs_count + ' obs' : '')).join("")}</div>`
             : `<div class="highlight-empty">No endemic species data available</div>`}
@@ -909,7 +906,6 @@
         html += `<div class="highlights-grid">`;
         html += `<div class="highlight-card">
           <h3>\u{1F3C5} Most Observed Species <span class="highlight-count">Top 10</span></h3>
-          <p style="font-size:0.85rem;color:#888;margin-bottom:12px">Species with the most observations</p>
           ${topSpecies.length > 0
             ? topSpecies.map((s, i) => {
                 const taxonUrl = s.taxon_id ? `https://www.inaturalist.org/taxa/${s.taxon_id}` : "#";
@@ -925,7 +921,6 @@
         </div>`;
         html += `<div class="highlight-card">
           <h3>\u{1F50D} Top Identifiers <span class="highlight-count">Top 10</span></h3>
-          <p style="font-size:0.85rem;color:#888;margin-bottom:12px">Users who contributed the most identifications</p>
           ${topIdentifiers.length > 0
             ? topIdentifiers.map((item, i) => {
                 const url = `https://www.inaturalist.org/identifications?project_id=${PROJECT_SLUG}&user_id=${item.login}`;
@@ -945,14 +940,12 @@
         html += `<div class="highlights-grid">`;
         html += `<div class="highlight-card">
           <h3>\u2764\uFE0F Most Favorited <span class="highlight-count">Top 10</span></h3>
-          <p style="font-size:0.85rem;color:#888;margin-bottom:12px">Observations with the most favorites</p>
           ${topFavorited.length > 0
             ? topFavorited.map(o => obsItemHtml(o, `\u2764\uFE0F ${o.faves_count || 0}`)).join("")
             : `<div class="highlight-empty">No favorited observations</div>`}
         </div>`;
         html += `<div class="highlight-card">
           <h3>\u{1F4AC} Most Commented <span class="highlight-count">Top 10</span></h3>
-          <p style="font-size:0.85rem;color:#888;margin-bottom:12px">Observations with the most comments</p>
           ${topCommented.length > 0
             ? topCommented.map(o => obsItemHtml(o, `\u{1F4AC} ${o.comments_count || 0}`)).join("")
             : `<div class="highlight-empty">No commented observations</div>`}
