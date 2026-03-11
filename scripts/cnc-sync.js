@@ -221,6 +221,7 @@ function mapObservation(obs, projectSlug) {
     common_name: obs.taxon ? obs.taxon.preferred_common_name : null,
     iconic_taxon_name: obs.taxon ? obs.taxon.iconic_taxon_name : null,
     photo_url: photo,
+    comments_count: obs.comments_count || 0,
     created_at: obs.created_at || null,
   };
 }

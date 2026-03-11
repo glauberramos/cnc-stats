@@ -132,8 +132,23 @@ function computeStats(allObs) {
     casual: casual,
   };
 
+  // --- Most Commented ---
+  const most_commented = [...allObs]
+    .filter((o) => (o.comments_count || 0) > 0)
+    .sort((a, b) => (b.comments_count || 0) - (a.comments_count || 0))
+    .slice(0, 10)
+    .map((o) => ({
+      inat_id: o.inat_id,
+      common_name: o.common_name,
+      taxon_name: o.taxon_name,
+      photo_url: o.photo_url,
+      user_login: o.user_login,
+      comments_count: o.comments_count || 0,
+    }));
+
   return {
     summary,
+    most_commented,
   };
 }
 
