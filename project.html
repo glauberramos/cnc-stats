@@ -787,7 +787,7 @@
           const name = s.common_name || s.taxon_name || "Unknown";
           const sci = s.taxon_name || "";
           const photo = s.photo_url || "";
-          const taxonUrl = s.taxon_id ? `https://www.inaturalist.org/taxa/${s.taxon_id}` : "#";
+          const taxonUrl = s.taxon_id ? `https://www.inaturalist.org/observations?project_id=${PROJECT_SLUG}&taxon_id=${s.taxon_id}&verifiable=any` : "#";
           return `
             <a class="species-list-item" href="${taxonUrl}" target="_blank">
               ${photo ? `<img src="${photo}" alt="" />` : `<span style="width:40px;height:40px;border-radius:8px;background:#e8e8e8;display:inline-block;flex-shrink:0"></span>`}
@@ -903,7 +903,7 @@
           <h3>\u{1F3C5} Most Observed Species <span class="highlight-count">Top 10</span></h3>
           ${topSpecies.length > 0
             ? topSpecies.map((s, i) => {
-                const taxonUrl = s.taxon_id ? `https://www.inaturalist.org/taxa/${s.taxon_id}` : "#";
+                const taxonUrl = s.taxon_id ? `https://www.inaturalist.org/observations?project_id=${PROJECT_SLUG}&taxon_id=${s.taxon_id}&verifiable=any` : "#";
                 return `<a class="species-list-item" href="${taxonUrl}" target="_blank">
                   ${s.photo ? `<img src="${s.photo}" alt="" />` : `<span style="width:40px;height:40px;border-radius:8px;background:#e8e8e8;display:inline-block;flex-shrink:0"></span>`}
                   <div class="sli-info">
