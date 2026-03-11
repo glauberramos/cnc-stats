@@ -132,57 +132,8 @@ function computeStats(allObs) {
     casual: casual,
   };
 
-  // --- Top observed species ---
-  const speciesObs = {};
-  allObs.forEach((o) => {
-    if (!o.min_species_taxon_id || !leafSpecies.has(o.min_species_taxon_id)) return;
-    const sid = o.min_species_taxon_id;
-    if (!speciesObs[sid]) speciesObs[sid] = { taxon_id: sid, name: o.common_name || o.taxon_name || "Unknown", sci: o.taxon_name, count: 0, photo: o.photo_url };
-    if (o.taxon_rank === "species" || !speciesObs[sid].sci) {
-      speciesObs[sid].name = o.common_name || o.taxon_name || speciesObs[sid].name;
-      speciesObs[sid].sci = o.taxon_name || speciesObs[sid].sci;
-      if (o.photo_url) speciesObs[sid].photo = o.photo_url;
-    }
-    speciesObs[sid].count++;
-  });
-  const top_observed_species = Object.values(speciesObs)
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 10);
-
-  // --- Taxonomy stats ---
-  const taxStats = {};
-  allObs.forEach((o) => {
-    const iconic = o.iconic_taxon_name;
-    if (!iconic) return;
-    if (!taxStats[iconic]) taxStats[iconic] = { obs: 0, species: new Set() };
-    taxStats[iconic].obs++;
-    if (o.min_species_taxon_id && leafSpecies.has(o.min_species_taxon_id)) {
-      taxStats[iconic].species.add(o.min_species_taxon_id);
-    }
-  });
-  const taxonomy_stats = {};
-  for (const [key, s] of Object.entries(taxStats)) {
-    taxonomy_stats[key] = { obs: s.obs, species: s.species.size };
-  }
-
-  // --- Most Faved ---
-  const most_faved = [...allObs]
-    .map((o) => ({ ...o, engagement: (o.faves_count || 0) + (o.comments_count || 0) }))
-    .filter((o) => o.engagement > 0)
-    .sort((a, b) => b.engagement - a.engagement)
-    .slice(0, 20)
-    .map((o) => ({
-      inat_id: o.inat_id, common_name: o.common_name, taxon_name: o.taxon_name,
-      photo_url: o.photo_url, user_login: o.user_login,
-      faves_count: o.faves_count || 0, comments_count: o.comments_count || 0,
-      engagement: o.engagement,
-    }));
-
   return {
     summary,
-    top_observed_species,
-    taxonomy_stats,
-    most_faved,
   };
 }
 
@@ -254,38 +205,6 @@ async function consolidateProject(slug, index, total) {
       if (a.first_global_obs !== b.first_global_obs) return a.first_global_obs ? -1 : 1;
       return (a.global_obs_count || 0) - (b.global_obs_count || 0);
     });
-
-  // --- Endangered species (from cnc_taxa) ---
-  const severityOrder = { CR: 0, EN: 1, VU: 2, NT: 3 };
-  const endangeredList = speciesIds
-    .filter((id) => taxaMap[id] && taxaMap[id].conservation_status && taxaMap[id].conservation_status !== "LC")
-    .map((id) => ({
-      taxon_id: id,
-      taxon_name: speciesInfo[id]?.taxon_name || "Unknown",
-      common_name: speciesInfo[id]?.common_name || null,
-      photo_url: speciesInfo[id]?.photo_url || null,
-      status: taxaMap[id].conservation_status,
-      status_name: taxaMap[id].conservation_status_name,
-      project_obs_count: projectObsCount[id] || 0,
-    }));
-  endangeredList.sort((a, b) => (severityOrder[a.status] ?? 99) - (severityOrder[b.status] ?? 99));
-
-  stats.endangered_species = {
-    total: endangeredList.length,
-    species: endangeredList,
-  };
-
-  // --- Endemic species (from cnc_project_species) ---
-  stats.endemic_species = speciesIds
-    .filter((id) => projectSpeciesMap[id] && projectSpeciesMap[id].is_endemic)
-    .map((id) => ({
-      taxon_id: id,
-      taxon_name: speciesInfo[id]?.taxon_name || "Unknown",
-      common_name: speciesInfo[id]?.common_name || null,
-      photo_url: speciesInfo[id]?.photo_url || null,
-      obs_count: projectObsCount[id] || 0,
-    }))
-    .sort((a, b) => b.obs_count - a.obs_count);
 
   // --- Write computed stats ---
   if (!dryRun) {

@@ -221,8 +221,6 @@ function mapObservation(obs, projectSlug) {
     common_name: obs.taxon ? obs.taxon.preferred_common_name : null,
     iconic_taxon_name: obs.taxon ? obs.taxon.iconic_taxon_name : null,
     photo_url: photo,
-    faves_count: obs.faves_count || 0,
-    comments_count: obs.comments_count || 0,
     created_at: obs.created_at || null,
   };
 }
@@ -407,7 +405,6 @@ async function syncTaxa(projects) {
   console.log(`  Already cached: ${existingIds.size}, need to fetch: ${missingIds.length}`);
 
   // Batch-fetch from iNat API
-  const iucnNumToCode = { 50: "CR", 40: "EN", 30: "VU", 20: "NT", 10: "LC" };
   const now = new Date().toISOString();
   let fetched = 0;
 
@@ -416,21 +413,11 @@ async function syncTaxa(projects) {
     const data = await rateLimitedFetch(`${API_BASE}/taxa/${batch.join(",")}`);
 
     if (data.results) {
-      const rows = data.results.map((t) => {
-        let status = null;
-        let statusName = null;
-        if (t.conservation_status && t.conservation_status.status) {
-          status = t.conservation_status.status.toUpperCase();
-          statusName = t.conservation_status.status_name || t.conservation_status.status;
-        }
-        return {
-          taxon_id: t.id,
-          observations_count: t.observations_count || 0,
-          conservation_status: status,
-          conservation_status_name: statusName,
-          synced_at: now,
-        };
-      });
+      const rows = data.results.map((t) => ({
+        taxon_id: t.id,
+        observations_count: t.observations_count || 0,
+        synced_at: now,
+      }));
 
       if (!dryRun && rows.length > 0) {
         const { error } = await db.from("cnc_taxa").upsert(rows, { onConflict: "taxon_id" });
@@ -448,9 +435,9 @@ async function syncTaxa(projects) {
   console.log(`\n=== Taxa sync complete: ${fetched} new taxa cached ===`);
 }
 
-// ─── Step 4: Sync local counts + endemic species to cnc_project_species ───
+// ─── Step 4: Sync local counts to cnc_project_species ───
 async function syncLocalCountsAndEndemics(projects) {
-  console.log(`\n=== Step 4: Syncing local counts & endemic species ===\n`);
+  console.log(`\n=== Step 4: Syncing local counts ===\n`);
 
   for (let pi = 0; pi < projects.length; pi++) {
     const project = projects[pi];
@@ -511,32 +498,11 @@ async function syncLocalCountsAndEndemics(projects) {
       console.log(`${prefix}: local counts ${Math.min(i + TAXA_BATCH_SIZE, localSpeciesIds.length)}/${localSpeciesIds.length}`);
     }
 
-    console.log(`${prefix}: fetching endemic species...`);
-    // Fetch endemic species
-    const endemicSet = new Set();
-    let endemicPage = 1;
-    let endemicTotal = 0;
-    do {
-      const data = await rateLimitedFetch(
-        `${API_BASE}/observations/species_counts?project_id=${project.slug}&endemic=true&per_page=500&page=${endemicPage}`
-      );
-      if (data.results) {
-        data.results.forEach((r) => {
-          if (r.taxon && leafSpecies.has(r.taxon.id)) {
-            endemicSet.add(r.taxon.id);
-          }
-        });
-      }
-      endemicTotal = data.total_results || 0;
-      endemicPage++;
-    } while ((endemicPage - 1) * 500 < endemicTotal);
-
     // Build rows for cnc_project_species
     const rows = speciesIds.map((id) => ({
       project_slug: project.slug,
       taxon_id: id,
       local_obs_count: localCounts[id] ?? null,
-      is_endemic: endemicSet.has(id),
       synced_at: now,
     }));
 
@@ -551,10 +517,10 @@ async function syncLocalCountsAndEndemics(projects) {
       }
     }
 
-    console.log(`${prefix}: ${localSpeciesIds.length} local counts, ${endemicSet.size} endemic species`);
+    console.log(`${prefix}: ${localSpeciesIds.length} local counts`);
   }
 
-  console.log(`\n=== Local counts & endemic sync complete ===`);
+  console.log(`\n=== Local counts sync complete ===`);
 }
 
 
@@ -636,7 +602,7 @@ async function main() {
   // Step 3: Sync taxa
   await syncTaxa(projects);
 
-  // Step 4: Sync local counts & endemic species
+  // Step 4: Sync local counts
   await syncLocalCountsAndEndemics(projects);
 
   // Update synced_at for all processed projects
