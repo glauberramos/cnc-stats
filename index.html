@@ -108,6 +108,42 @@
         .stat-card .stat-value { font-size: 1.4rem; }
       }
 
+      /* First observations */
+      .first-obs-card {
+        background: white; border-radius: 12px; padding: 20px;
+        border: 1px solid #e0e0e0; margin-bottom: 24px;
+      }
+      .first-obs-card h3 {
+        font-size: 1rem; font-weight: 700; color: #1a1a1a; margin-bottom: 14px;
+        padding-bottom: 10px; border-bottom: 2px solid #e0e0e0;
+        display: flex; align-items: center; gap: 8px;
+      }
+      .first-obs-card h3 .highlight-count {
+        font-size: 0.85rem; font-weight: 700; color: #2E7D32;
+        margin-left: auto; background: #e8f5e9; padding: 2px 10px; border-radius: 12px;
+      }
+      .first-obs-item {
+        display: flex; align-items: center; gap: 10px; padding: 8px 6px;
+        border-radius: 8px; transition: background 0.2s; text-decoration: none; color: inherit;
+      }
+      .first-obs-item:hover { background: #f5f5f5; }
+      .first-obs-item img { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; background: #e8e8e8; flex-shrink: 0; }
+      .first-obs-item .fo-info { flex: 1; min-width: 0; }
+      .first-obs-item .fo-name { font-size: 0.9rem; font-weight: 700; color: #1a1a1a; }
+      .first-obs-item .fo-sci { font-size: 0.8rem; font-style: italic; color: #888; }
+      .first-obs-item .fo-project { font-size: 0.75rem; color: #aaa; }
+      .first-obs-item .fo-badge {
+        font-size: 0.7rem; font-weight: 700; padding: 3px 8px; border-radius: 10px;
+        white-space: nowrap; flex-shrink: 0;
+      }
+      .fo-badge-global { background: linear-gradient(135deg,#FFD700,#FFA000); color: #333; box-shadow: 0 1px 3px rgba(255,160,0,0.3); }
+      .fo-badge-local { background: linear-gradient(135deg,#4CAF50,#2E7D32); color: #fff; box-shadow: 0 1px 3px rgba(46,125,50,0.3); }
+      body.dark-mode .first-obs-card { background: #2d2d2d; border-color: #444; }
+      body.dark-mode .first-obs-card h3 { color: #e0e0e0; border-bottom-color: #444; }
+      body.dark-mode .first-obs-card h3 .highlight-count { background: rgba(46,125,50,0.3); color: #6abf69; }
+      body.dark-mode .first-obs-item:hover { background: #3d3d3d; }
+      body.dark-mode .first-obs-item .fo-name { color: #e0e0e0; }
+
       /* Footer */
       .site-footer {
         background: #1a1a1a; margin-top: 60px; padding: 40px 20px; text-align: center;
@@ -134,6 +170,7 @@
         <div class="stat-card"><div class="skeleton-bar" style="width:50%;height:28px;margin:0 auto 8px"></div><div class="skeleton-bar" style="width:70%;height:10px;margin:0 auto"></div></div>
         <div class="stat-card"><div class="skeleton-bar" style="width:45%;height:28px;margin:0 auto 8px"></div><div class="skeleton-bar" style="width:80%;height:10px;margin:0 auto"></div></div>
       </div>
+      <div id="firstObsContainer"></div>
       <input type="text" id="searchBox" class="search-box" placeholder="Search projects..." oninput="onSearch(this.value)" />
       <div id="projectList" class="project-list">
         <div class="skeleton-item"><div class="skeleton-icon"></div><div class="skeleton-info"><div class="skeleton-bar" style="width:60%;height:14px"></div><div class="skeleton-bar" style="width:40%;height:10px"></div></div><div class="skeleton-bar" style="width:60px;height:14px"></div></div>
@@ -298,6 +335,53 @@
         }
       }
       fetchUmbrellaStats();
+
+      // Aggregate first observations (research grade, global firsts) across all projects
+      async function renderGlobalFirstObs() {
+        // Wait for allProjects to be loaded
+        if (!allProjects) {
+          allProjects = await fetchAllProjects();
+        }
+        const globalFirsts = [];
+        const seen = new Set();
+        for (const p of allProjects) {
+          const firstObs = p.computed_stats?.first_observations || [];
+          for (const s of firstObs) {
+            if (!s.research_grade || !s.first_global_obs) continue;
+            if (seen.has(s.taxon_id)) continue;
+            seen.add(s.taxon_id);
+            globalFirsts.push({ ...s, project_slug: p.slug, project_title: p.title });
+          }
+        }
+        globalFirsts.sort((a, b) => (a.global_obs_count || 0) - (b.global_obs_count || 0));
+
+        if (globalFirsts.length === 0) return;
+
+        const container = document.getElementById("firstObsContainer");
+        container.innerHTML = `
+          <div class="first-obs-card">
+            <h3>\u2B50 First Global Observations <span class="highlight-count">${globalFirsts.length} species</span></h3>
+            <div style="max-height:560px;overflow-y:auto">
+            ${globalFirsts.map(s => {
+              const name = s.common_name || s.taxon_name || "Unknown";
+              const sci = s.taxon_name || "";
+              const photo = s.photo_url || "";
+              const projectTitle = s.project_title || s.project_slug;
+              const taxonUrl = s.taxon_id ? "https://www.inaturalist.org/observations?project_id=" + s.project_slug + "&taxon_id=" + s.taxon_id + "&verifiable=any" : "#";
+              return '<a class="first-obs-item" href="' + taxonUrl + '" target="_blank">'
+                + (photo ? '<img src="' + photo + '" alt="" />' : '<span style="width:40px;height:40px;border-radius:8px;background:#e8e8e8;display:inline-block;flex-shrink:0"></span>')
+                + '<div class="fo-info">'
+                + '<div class="fo-name">' + name + '</div>'
+                + (sci && sci !== name ? '<div class="fo-sci">' + sci + '</div>' : '')
+                + '<div class="fo-project">' + projectTitle + '</div>'
+                + '</div>'
+                + '<span class="fo-badge fo-badge-global">\u2B50 1st global \u00B7 ' + (s.global_obs_count || 0) + ' obs</span>'
+                + '</a>';
+            }).join("")}
+            </div>
+          </div>`;
+      }
+      renderGlobalFirstObs();
     </script>
   </body>
 </html>
