@@ -806,7 +806,11 @@
               }
             } catch (e) { /* ignore */ }
           }
-          mapSubtitle.innerHTML = `<div class="map-stat-card"><div class="map-stat-value">${coveragePct}%</div><div class="map-stat-label">${observedCells.size.toLocaleString()} of ${totalLandCells.toLocaleString()} grid squares covered</div></div>${areaCard}`;
+          const midLat = (bounds.swLat + bounds.neLat) / 2;
+          const cellWidthM = 40075016.686 * Math.cos(midLat * Math.PI / 180) / (1 << zoom) / GRID_PER_TILE;
+          const cellAreaKm2 = (cellWidthM * cellWidthM) / 1e6;
+          const cellLabel = cellAreaKm2 >= 1 ? cellAreaKm2.toFixed(1) + " km\u00B2" : cellAreaKm2.toFixed(2) + " km\u00B2";
+          mapSubtitle.innerHTML = `<div class="map-stat-card"><div class="map-stat-value">${coveragePct}%</div><div class="map-stat-label">${observedCells.size.toLocaleString()} of ${totalLandCells.toLocaleString()} grid squares covered \u00B7 ~${cellLabel}/square</div></div>${areaCard}`;
 
         } catch (err) {
           console.error("Map error:", err);
