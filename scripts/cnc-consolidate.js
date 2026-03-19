@@ -173,10 +173,12 @@ async function consolidateProject(slug, index, total) {
   // Build project obs counts per species
   const projectObsCount = {};
   const speciesInfo = {};
+  const speciesHasRG = {};
   allObs.forEach((o) => {
     if (!o.min_species_taxon_id || !leafSpecies.has(o.min_species_taxon_id)) return;
     const tid = o.min_species_taxon_id;
     projectObsCount[tid] = (projectObsCount[tid] || 0) + 1;
+    if (o.quality_grade === "research") speciesHasRG[tid] = true;
     if (!speciesInfo[tid] || o.taxon_rank === "species") {
       speciesInfo[tid] = {
         taxon_name: o.taxon_name, common_name: o.common_name, photo_url: o.photo_url,
@@ -215,6 +217,7 @@ async function consolidateProject(slug, index, total) {
       project_obs_count: projectObsCount[id] || 0,
       first_global_obs: firstGlobalIds.has(id),
       first_local_obs: firstLocalIds.has(id),
+      research_grade: !!speciesHasRG[id],
     }))
     .sort((a, b) => {
       if (a.first_global_obs !== b.first_global_obs) return a.first_global_obs ? -1 : 1;

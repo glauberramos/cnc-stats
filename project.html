@@ -122,6 +122,16 @@
         margin-left: auto; background: #e8f5e9; padding: 2px 10px; border-radius: 12px;
       }
       .highlight-empty { color: #999; font-size: 0.9rem; padding: 10px 0; }
+      .group-header {
+        font-size: 0.8rem; font-weight: 700; padding: 8px 10px; margin-bottom: 4px;
+        cursor: pointer; display: flex; align-items: center; justify-content: space-between;
+        border-radius: 8px; user-select: none; transition: background 0.2s;
+      }
+      .group-header:hover { opacity: 0.85; }
+      .group-header .collapse-arrow { font-size: 0.65rem; opacity: 0.6; }
+      .group-header-rg { color: #2E7D32; background: #e8f5e9; }
+      .group-header-needs-id { color: #e65100; background: #fff3e0; }
+      .group-header-mt { margin-top: 12px; }
       .scrollable-list { max-height: 560px; overflow-y: auto; }
       .scrollable-list::-webkit-scrollbar { width: 6px; }
       .scrollable-list::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
@@ -225,6 +235,8 @@
       body.dark-mode .highlight-card { background: #2d2d2d; border-color: #333; }
       body.dark-mode .highlight-card h3 { color: #e0e0e0; border-bottom-color: #444; }
       body.dark-mode .highlight-card h3 .highlight-count { background: rgba(46,125,50,0.3); color: #6abf69; }
+      body.dark-mode .group-header-rg { color: #6abf69; background: rgba(46,125,50,0.15); }
+      body.dark-mode .group-header-needs-id { color: #ffab40; background: rgba(230,81,0,0.15); }
       body.dark-mode .species-list-item:hover { background: #3d3d3d; }
       body.dark-mode .species-list-item .sli-name { color: #e0e0e0; }
       body.dark-mode .species-list-item .sli-badge { background: rgba(46,125,50,0.3); color: #6abf69; }
@@ -860,25 +872,40 @@
           <div class="map-container" id="observationMap" style="grid-template-columns: repeat(32, 1fr)"></div>
         </div>`;
         html += `<div class="highlight-card">
-          <h3>\u{2B50} First Observations <span class="highlight-count">${firstObservations.length} species</span>${lastUpdated}</h3>
+          <h3>\u{2B50} First Observations <span class="highlight-count">${firstObservations.filter(s => s.research_grade).length} species</span>${lastUpdated}</h3>
           ${firstObservations.length > 0
-            ? `<div class="scrollable-list">${firstObservations.map(s => {
-                const name = s.common_name || s.taxon_name || "Unknown";
-                const sci = s.taxon_name || "";
-                const photo = s.photo_url || "";
-                const taxonUrl = s.taxon_id ? "https://www.inaturalist.org/observations?project_id=" + PROJECT_SLUG + "&taxon_id=" + s.taxon_id + "&verifiable=any" : "#";
-                return '<a class="species-list-item" href="' + taxonUrl + '" target="_blank">'
-                  + (photo ? '<img src="' + photo + '" alt="" />' : '<span style="width:40px;height:40px;border-radius:8px;background:#e8e8e8;display:inline-block;flex-shrink:0"></span>')
-                  + '<div class="sli-info">'
-                  + '<div class="sli-name">' + name + '</div>'
-                  + (sci && sci !== name ? '<div class="sli-sci">' + sci + '</div>' : '')
-                  + '</div>'
-                  + '<div class="sli-tags" style="display:flex;align-items:center;gap:6px;flex-shrink:0">'
-                  + (s.first_global_obs ? '<span style="background:linear-gradient(135deg,#FFD700,#FFA000);color:#333;font-size:0.7rem;font-weight:700;padding:3px 8px;border-radius:10px;white-space:nowrap;box-shadow:0 1px 3px rgba(255,160,0,0.3)">\u2B50 1st global</span>' : '')
-                  + (s.first_local_obs ? '<span style="background:linear-gradient(135deg,#4CAF50,#2E7D32);color:#fff;font-size:0.7rem;font-weight:700;padding:3px 8px;border-radius:10px;white-space:nowrap;box-shadow:0 1px 3px rgba(46,125,50,0.3)">\u{1F4CD} 1st local</span>' : '')
-                  + '<span class="sli-badge">' + (s.global_obs_count || 0) + ' global' + (s.local_obs_count != null ? ' \u00B7 ' + s.local_obs_count + ' local' : '') + '</span>'
-                  + '</div></a>';
-              }).join("")}</div>`
+            ? (() => {
+                const rgObs = firstObservations.filter(s => s.research_grade);
+                const needsIdObs = firstObservations.filter(s => !s.research_grade);
+                function firstObsItemHtml(s) {
+                  const name = s.common_name || s.taxon_name || "Unknown";
+                  const sci = s.taxon_name || "";
+                  const photo = s.photo_url || "";
+                  const taxonUrl = s.taxon_id ? "https://www.inaturalist.org/observations?project_id=" + PROJECT_SLUG + "&taxon_id=" + s.taxon_id + "&verifiable=any" : "#";
+                  return '<a class="species-list-item" href="' + taxonUrl + '" target="_blank">'
+                    + (photo ? '<img src="' + photo + '" alt="" />' : '<span style="width:40px;height:40px;border-radius:8px;background:#e8e8e8;display:inline-block;flex-shrink:0"></span>')
+                    + '<div class="sli-info">'
+                    + '<div class="sli-name">' + name + '</div>'
+                    + (sci && sci !== name ? '<div class="sli-sci">' + sci + '</div>' : '')
+                    + '</div>'
+                    + '<div class="sli-tags" style="display:flex;align-items:center;gap:6px;flex-shrink:0">'
+                    + (s.first_global_obs ? '<span style="background:linear-gradient(135deg,#FFD700,#FFA000);color:#333;font-size:0.7rem;font-weight:700;padding:3px 8px;border-radius:10px;white-space:nowrap;box-shadow:0 1px 3px rgba(255,160,0,0.3)">\u2B50 1st global</span>' : '')
+                    + (s.first_local_obs ? '<span style="background:linear-gradient(135deg,#4CAF50,#2E7D32);color:#fff;font-size:0.7rem;font-weight:700;padding:3px 8px;border-radius:10px;white-space:nowrap;box-shadow:0 1px 3px rgba(46,125,50,0.3)">\u{1F4CD} 1st local</span>' : '')
+                    + '<span class="sli-badge">' + (s.global_obs_count || 0) + ' global' + (s.local_obs_count != null ? ' \u00B7 ' + s.local_obs_count + ' local' : '') + '</span>'
+                    + '</div></a>';
+                }
+                let listHtml = '<div class="scrollable-list">';
+                if (rgObs.length > 0) {
+                  listHtml += '<div class="group-header group-header-rg" onclick="const c=this.nextElementSibling;const a=this.querySelector(\'.collapse-arrow\');if(c.style.display===\'none\'){c.style.display=\'\';a.textContent=\'\\u25B2\'}else{c.style.display=\'none\';a.textContent=\'\\u25BC\'}">\u2705 Research Grade (' + rgObs.length + ')<span class="collapse-arrow">\u25B2</span></div>';
+                  listHtml += '<div>' + rgObs.map(firstObsItemHtml).join("") + '</div>';
+                }
+                if (needsIdObs.length > 0) {
+                  listHtml += '<div class="group-header group-header-needs-id' + (rgObs.length > 0 ? ' group-header-mt' : '') + '" onclick="const c=this.nextElementSibling;const a=this.querySelector(\'.collapse-arrow\');if(c.style.display===\'none\'){c.style.display=\'\';a.textContent=\'\\u25B2\'}else{c.style.display=\'none\';a.textContent=\'\\u25BC\'}">\u{1F50D} Needs ID (' + needsIdObs.length + ')<span class="collapse-arrow">\u25B2</span></div>';
+                  listHtml += '<div>' + needsIdObs.map(firstObsItemHtml).join("") + '</div>';
+                }
+                listHtml += '</div>';
+                return listHtml;
+              })()
             : `<div class="highlight-empty">No first observations found</div>`}
         </div>`;
         html += `</div>`;
