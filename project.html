@@ -543,7 +543,7 @@
         document.getElementById("statsBar").innerHTML = `
           <a class="stat-card" href="${baseUrl}" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${s.total_observations.toLocaleString()}</div><div class="stat-label">📷 Observations</div></a>
           <a class="stat-card" href="${baseUrl}&view=species" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${s.total_species.toLocaleString()}</div><div class="stat-label">🌿 Species</div></a>
-          <div class="stat-card"><div class="stat-value">${s.total_observations > 0 ? Math.round((s.total_species / s.total_observations) * 100) : 0}%</div><div class="stat-label">🧬 Species/Obs Ratio</div></div>
+          <div class="stat-card"><div class="stat-value">${s.total_species > 0 ? (s.total_observations / s.total_species).toFixed(1) : 0}</div><div class="stat-label">🧬 Obs/Species</div></div>
           <div class="stat-card"><div class="stat-value">${s.total_observers > 0 ? (s.total_observations / s.total_observers).toFixed(1) : 0}</div><div class="stat-label">📊 Obs/Person</div></div>
           <a class="stat-card" href="${baseUrl}&quality_grade=research" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${s.research_grade.toLocaleString()}</div><div class="stat-label">✅ Research Grade</div></a>
           <div class="stat-card"><div class="stat-value">${s.total_observations > 0 ? Math.round(s.research_grade / s.total_observations * 100) : 0}%</div><div class="stat-label">✅ Research Grade Rate</div></div>
