@@ -371,17 +371,20 @@ async function syncTaxa(projects) {
 
   // Collect all unique species IDs across synced projects
   const allSpeciesIds = new Set();
-  for (const project of projects) {
+  for (let pi = 0; pi < projects.length; pi++) {
+    const project = projects[pi];
+    console.log(`  [${pi + 1}/${projects.length}] Loading observations for ${project.slug}...`);
     const obs = await fetchAllObservations(project.slug);
     const leafSpecies = computeLeafSpecies(obs);
     leafSpecies.forEach((id) => allSpeciesIds.add(id));
-    console.log(`  ${project.slug}: ${leafSpecies.size} leaf species`);
+    console.log(`  [${pi + 1}/${projects.length}] ${project.slug}: ${obs.length} obs, ${leafSpecies.size} leaf species`);
   }
 
   const speciesIds = [...allSpeciesIds];
   console.log(`\n  Total unique species: ${speciesIds.length}`);
 
   // Check which are already in cnc_taxa
+  console.log(`  Checking cached taxa...`);
   const existingIds = new Set();
   for (let i = 0; i < speciesIds.length; i += 1000) {
     const batch = speciesIds.slice(i, i + 1000);
@@ -401,6 +404,7 @@ async function syncTaxa(projects) {
 
   for (let i = 0; i < missingIds.length; i += TAXA_BATCH_SIZE) {
     const batch = missingIds.slice(i, i + TAXA_BATCH_SIZE);
+    console.log(`  Fetching new taxa ${Math.min(i + TAXA_BATCH_SIZE, missingIds.length)}/${missingIds.length}...`);
     const data = await rateLimitedFetch(`${API_BASE}/taxa/${batch.join(",")}`);
 
     if (data.results) {
@@ -417,26 +421,31 @@ async function syncTaxa(projects) {
 
       fetched += rows.length;
     }
-
-    if ((i + TAXA_BATCH_SIZE) % 300 === 0 || i + TAXA_BATCH_SIZE >= missingIds.length) {
-      console.log(`  Fetched ${Math.min(i + TAXA_BATCH_SIZE, missingIds.length)}/${missingIds.length} taxa`);
-    }
   }
 
   console.log(`\n  New taxa cached: ${fetched}`);
 
-  // Refresh stale taxa (synced more than 7 days ago) to detect taxon swaps
+  // Refresh stale taxa (>7 days old OR observations_count=0) to detect taxon swaps and fix bad data
   const staleDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-  const staleIds = [];
+  const staleIdSet = new Set();
   for (let i = 0; i < speciesIds.length; i += 1000) {
     const batch = speciesIds.slice(i, i + 1000);
-    const { data } = await db
+    // Stale by date
+    const { data: staleByDate } = await db
       .from("cnc_taxa")
       .select("taxon_id")
       .in("taxon_id", batch)
       .lt("synced_at", staleDate);
-    if (data) data.forEach((r) => staleIds.push(r.taxon_id));
+    if (staleByDate) staleByDate.forEach((r) => staleIdSet.add(r.taxon_id));
+    // Stale by zero count (likely bad data)
+    const { data: zeroCount } = await db
+      .from("cnc_taxa")
+      .select("taxon_id")
+      .in("taxon_id", batch)
+      .eq("observations_count", 0);
+    if (zeroCount) zeroCount.forEach((r) => staleIdSet.add(r.taxon_id));
   }
+  const staleIds = [...staleIdSet];
 
   if (staleIds.length > 0) {
     console.log(`  Refreshing ${staleIds.length} stale taxa (>7 days old)...`);
@@ -445,6 +454,8 @@ async function syncTaxa(projects) {
 
     for (let i = 0; i < staleIds.length; i += TAXA_BATCH_SIZE) {
       const batch = staleIds.slice(i, i + TAXA_BATCH_SIZE);
+      const progress = Math.min(i + TAXA_BATCH_SIZE, staleIds.length);
+      console.log(`  Refreshing ${progress}/${staleIds.length} taxa...`);
       const data = await rateLimitedFetch(`${API_BASE}/taxa/${batch.join(",")}`);
       const returnedIds = new Set();
 
@@ -587,6 +598,7 @@ async function syncLocalCountsAndEndemics(projects) {
     if (!dryRun && rows.length > 0) {
       for (let i = 0; i < rows.length; i += 500) {
         const batch = rows.slice(i, i + 500);
+        console.log(`${prefix}: saving species ${Math.min(i + 500, rows.length)}/${rows.length}...`);
         const { error } = await db.from("cnc_project_species").upsert(batch, {
           onConflict: "project_slug,taxon_id",
         });
@@ -594,7 +606,7 @@ async function syncLocalCountsAndEndemics(projects) {
       }
     }
 
-    console.log(`${prefix}: ${localSpeciesIds.length} local counts`);
+    console.log(`${prefix}: done — ${localSpeciesIds.length} local counts saved`);
   }
 
   console.log(`\n=== Local counts sync complete ===`);
