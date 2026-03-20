@@ -254,13 +254,22 @@ async function main() {
   if (singleProject) {
     projects = [{ slug: singleProject }];
   } else {
-    const { data, error } = await db
-      .from("cnc_projects")
-      .select("slug, total_observations, synced_at, computed_at")
-      .order("total_observations", { ascending: false, nullsFirst: false });
+    projects = [];
+    let from = 0;
+    const pageSize = 1000;
+    while (true) {
+      const { data, error } = await db
+        .from("cnc_projects")
+        .select("slug, total_observations, synced_at, computed_at")
+        .order("total_observations", { ascending: false, nullsFirst: false })
+        .range(from, from + pageSize - 1);
 
-    if (error) throw new Error(`Fetch projects: ${error.message}`);
-    projects = data;
+      if (error) throw new Error(`Fetch projects: ${error.message}`);
+      if (!data || data.length === 0) break;
+      projects = projects.concat(data);
+      if (data.length < pageSize) break;
+      from += pageSize;
+    }
   }
 
   console.log(`\nConsolidating ${projects.length} projects...\n`);
