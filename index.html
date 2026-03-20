@@ -217,8 +217,10 @@
       };
 
       const urlParams = new URLSearchParams(window.location.search);
-      let selectedYear = parseInt(urlParams.get("year")) || 2026;
+      const urlYear = urlParams.get("year");
+      let selectedYear = parseInt(urlYear) || parseInt(localStorage.getItem("cncYear")) || 2026;
       if (!YEAR_CONFIG[selectedYear]) selectedYear = 2026;
+      localStorage.setItem("cncYear", selectedYear);
 
       // Set dropdown and header
       document.getElementById("yearSelect").value = selectedYear;
@@ -226,6 +228,7 @@
       document.title = `CNC ${selectedYear} Projects`;
 
       function onYearChange(year) {
+        localStorage.setItem("cncYear", year);
         const url = new URL(window.location);
         url.searchParams.set("year", year);
         window.location.href = url.toString();

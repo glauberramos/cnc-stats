@@ -423,7 +423,93 @@ async function syncTaxa(projects) {
     }
   }
 
-  console.log(`\n=== Taxa sync complete: ${fetched} new taxa cached ===`);
+  console.log(`\n  New taxa cached: ${fetched}`);
+
+  // Refresh stale taxa (synced more than 7 days ago) to detect taxon swaps
+  const staleDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const staleIds = [];
+  for (let i = 0; i < speciesIds.length; i += 1000) {
+    const batch = speciesIds.slice(i, i + 1000);
+    const { data } = await db
+      .from("cnc_taxa")
+      .select("taxon_id")
+      .in("taxon_id", batch)
+      .lt("synced_at", staleDate);
+    if (data) data.forEach((r) => staleIds.push(r.taxon_id));
+  }
+
+  if (staleIds.length > 0) {
+    console.log(`  Refreshing ${staleIds.length} stale taxa (>7 days old)...`);
+    let refreshed = 0;
+    let swapped = 0;
+
+    for (let i = 0; i < staleIds.length; i += TAXA_BATCH_SIZE) {
+      const batch = staleIds.slice(i, i + TAXA_BATCH_SIZE);
+      const data = await rateLimitedFetch(`${API_BASE}/taxa/${batch.join(",")}`);
+      const returnedIds = new Set();
+
+      if (data.results) {
+        for (const t of data.results) {
+          returnedIds.add(t.id);
+
+          if (t.is_active === false && t.current_synonymous_taxon_id) {
+            // Taxon was swapped — fetch the new taxon
+            const newId = t.current_synonymous_taxon_id;
+            console.log(`  Taxon swap: ${t.name} (${t.id}) → ${newId}`);
+            try {
+              const newData = await rateLimitedFetch(`${API_BASE}/taxa/${newId}`);
+              const newTaxon = newData.results && newData.results[0];
+              if (newTaxon) {
+                // Update observations referencing the old taxon
+                if (!dryRun) {
+                  await db.from("cnc_observations")
+                    .update({
+                      min_species_taxon_id: newTaxon.id,
+                      taxon_id: newTaxon.id,
+                      taxon_name: newTaxon.name,
+                      common_name: newTaxon.preferred_common_name || null,
+                    })
+                    .eq("min_species_taxon_id", t.id);
+
+                  // Replace old taxa entry with new one
+                  await db.from("cnc_taxa").delete().eq("taxon_id", t.id);
+                  await db.from("cnc_taxa").upsert({
+                    taxon_id: newTaxon.id,
+                    observations_count: newTaxon.observations_count || 0,
+                    synced_at: now,
+                  }, { onConflict: "taxon_id" });
+                }
+                swapped++;
+              }
+            } catch (e) {
+              console.warn(`  Failed to resolve swap for ${t.id}: ${e.message}`);
+            }
+          } else {
+            // Active taxon — just refresh counts
+            if (!dryRun) {
+              await db.from("cnc_taxa").upsert({
+                taxon_id: t.id,
+                observations_count: t.observations_count || 0,
+                synced_at: now,
+              }, { onConflict: "taxon_id" });
+            }
+            refreshed++;
+          }
+        }
+      }
+
+      // Log taxa that weren't returned (fully deleted)
+      for (const id of batch) {
+        if (!returnedIds.has(id)) {
+          console.warn(`  Taxon ${id} not found on iNat (may be deleted)`);
+        }
+      }
+    }
+
+    console.log(`  Refreshed: ${refreshed}, swapped: ${swapped}`);
+  }
+
+  console.log(`\n=== Taxa sync complete ===`);
 }
 
 // ─── Step 4: Sync local counts to cnc_project_species ───
