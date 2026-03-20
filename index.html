@@ -247,7 +247,7 @@
         const speciesCount = p.computed_stats?.summary?.total_species ?? 0;
         const species = speciesCount.toLocaleString() + " species";
         return `
-          <a class="project-link" href="/cnc-stats/project.html?project=${p.slug}">
+          <a class="project-link" href="/cnc-stats/project/?project=${p.slug}">
             <img src="${icon}" alt="" />
             <div class="pl-info">
               <div class="pl-title">${title}</div>

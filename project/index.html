@@ -10,8 +10,8 @@
       plausible("pageview", { u: _slug ? location.origin + "/cnc-stats/project/" + _slug : location.href });
     </script>
     <title>CNC Project Stats</title>
-    <link rel="icon" href="favicon.ico" />
-    <link rel="stylesheet" href="dark-mode.css" />
+    <link rel="icon" href="../favicon.ico" />
+    <link rel="stylesheet" href="../dark-mode.css" />
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       html { overflow-x: hidden; }
@@ -267,8 +267,8 @@
 
     <div class="container">
       <header id="defaultHeader">
-        <img src="CNC_Logo_Grayscale.png" alt="City Nature Challenge" class="header-logo light" />
-        <img src="CNC_Logo_Knockout.png" alt="City Nature Challenge" class="header-logo dark" />
+        <img src="../CNC_Logo_Grayscale.png" alt="City Nature Challenge" class="header-logo light" />
+        <img src="../CNC_Logo_Knockout.png" alt="City Nature Challenge" class="header-logo dark" />
         <h1 id="defaultYear">2025</h1>
       </header>
       <script>if(new URLSearchParams(location.search).get("project"))document.getElementById("defaultHeader").style.display="none";</script>
@@ -303,7 +303,7 @@
       </div>
     </div>
 
-    <script src="dark-mode.js"></script>
+    <script src="../dark-mode.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
       const SUPABASE_URL = "https://kxxcmxlfairnauvunmwj.supabase.co";
@@ -385,7 +385,7 @@
         if (skeleton) skeleton.style.display = "none";
         header.style.display = "block";
 
-        const icon = project ? (project.icon || "logo.png") : "logo.png";
+        const icon = project ? (project.icon || "../logo.png") : "../logo.png";
         const title = project ? project.title : slug;
         const projectUrl = `https://www.inaturalist.org/projects/${slug}`;
 
@@ -401,8 +401,8 @@
         }
 
         header.innerHTML = `
-          <img src="CNC_Logo_Grayscale.png" alt="City Nature Challenge" class="header-logo light" />
-          <img src="CNC_Logo_Knockout.png" alt="City Nature Challenge" class="header-logo dark" />
+          <img src="../CNC_Logo_Grayscale.png" alt="City Nature Challenge" class="header-logo light" />
+          <img src="../CNC_Logo_Knockout.png" alt="City Nature Challenge" class="header-logo dark" />
           <h1>${title}</h1>${dateRange}
           <p style="margin-top:2px;margin-bottom:16px"><a href="${projectUrl}" target="_blank">View on iNaturalist \u2192</a></p>
         `;
@@ -1025,7 +1025,7 @@
       }
     </script>
     <footer class="site-footer">
-      <img src="CNC20_OrganizedLockup_W.png" alt="City Nature Challenge" />
+      <img src="../CNC20_OrganizedLockup_W.png" alt="City Nature Challenge" />
       <p>Website created by <a href="https://glauberramos.github.io/inat/" target="_blank">Glauber Ramos</a></p>
     </footer>
   </body>
