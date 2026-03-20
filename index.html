@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script defer data-domain="glauberramos.github.io/cnc-stats" src="https://plausible.io/js/script.js"></script>
-    <title>CNC 2025 Projects</title>
+    <title>CNC Projects</title>
     <link rel="icon" href="favicon.ico" />
     <link rel="stylesheet" href="dark-mode.css" />
     <style>
@@ -87,6 +87,14 @@
       }
       .search-box:focus { border-color: #2E7D32; }
       .search-box::placeholder { color: #aaa; }
+      .year-select {
+        font-size: 0.9rem; font-weight: 700; padding: 3px 6px; border-radius: 6px;
+        border: 1.5px solid #ccc; background: white; color: #555; cursor: pointer;
+        outline: none; vertical-align: baseline;
+      }
+      .year-select:hover { border-color: #2E7D32; color: #2E7D32; }
+      body.dark-mode .year-select { background: #333; border-color: #555; color: #aaa; }
+      body.dark-mode .year-select:hover { border-color: #6abf69; color: #6abf69; }
       body.dark-mode .search-box { background: #2d2d2d; border-color: #555; color: #e0e0e0; }
       body.dark-mode .search-box::placeholder { color: #666; }
       body.dark-mode .search-box:focus { border-color: #4a8c50; }
@@ -160,7 +168,13 @@
       <header>
         <img src="CNC_Logo_Grayscale.png" alt="City Nature Challenge" class="header-logo light" />
         <img src="CNC_Logo_Knockout.png" alt="City Nature Challenge" class="header-logo dark" />
-        <p style="color:#888;font-size:0.9rem">Apr 25 – Apr 28, 2025</p>
+        <p style="color:#888;font-size:0.9rem;margin-top:4px">
+          <span id="dateRange"></span>
+          <select id="yearSelect" class="year-select" onchange="onYearChange(this.value)">
+            <option value="2026">2026</option>
+            <option value="2025">2025</option>
+          </select>
+        </p>
         <p id="subtitle">Participating projects</p>
       </header>
       <div id="statsBar" class="stats-bar">
@@ -197,6 +211,26 @@
       const SUPABASE_KEY = "sb_publishable_lQU2ybO4fnJAKOrJBF8lrw_NnzJVev7";
       const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+      const YEAR_CONFIG = {
+        2025: { dates: "Apr 25 \u2013 Apr 28", umbrella: "city-nature-challenge-2025" },
+        2026: { dates: "Apr 24 \u2013 Apr 27", umbrella: "city-nature-challenge-2026" },
+      };
+
+      const urlParams = new URLSearchParams(window.location.search);
+      let selectedYear = parseInt(urlParams.get("year")) || 2026;
+      if (!YEAR_CONFIG[selectedYear]) selectedYear = 2026;
+
+      // Set dropdown and header
+      document.getElementById("yearSelect").value = selectedYear;
+      document.getElementById("dateRange").textContent = YEAR_CONFIG[selectedYear].dates;
+      document.title = `CNC ${selectedYear} Projects`;
+
+      function onYearChange(year) {
+        const url = new URL(window.location);
+        url.searchParams.set("year", year);
+        window.location.href = url.toString();
+      }
+
       const PAGE_SIZE = 100;
       let allProjects = null;
       let loaded = 0;
@@ -227,6 +261,7 @@
           const { data, error } = await db
             .from("cnc_projects")
             .select("slug, title, icon_url, computed_stats")
+            .eq("year", selectedYear)
             .order("total_observations", { ascending: false })
             .range(from, from + 999);
           if (error || !data || data.length === 0) break;
@@ -306,7 +341,7 @@
 
       // Fetch umbrella project stats from iNat API
       async function fetchUmbrellaStats() {
-        const slug = "city-nature-challenge-2025";
+        const slug = YEAR_CONFIG[selectedYear].umbrella;
         const api = "https://api.inaturalist.org/v1";
         const baseUrl = `https://www.inaturalist.org/observations?project_id=${slug}&verifiable=any`;
         try {

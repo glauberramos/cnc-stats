@@ -22,5 +22,12 @@ jobs:
       - name: Install dependencies
         run: npm install dotenv @supabase/supabase-js
 
-      - name: Sync projects
+      - name: Sync 2025 projects
         run: node scripts/cnc-sync.js
+        env:
+          CNC_YEAR: 2025
+
+      - name: Sync 2026 projects
+        run: node scripts/cnc-sync.js
+        env:
+          CNC_YEAR: 2026

@@ -264,7 +264,7 @@
       <header id="defaultHeader">
         <img src="CNC_Logo_Grayscale.png" alt="City Nature Challenge" class="header-logo light" />
         <img src="CNC_Logo_Knockout.png" alt="City Nature Challenge" class="header-logo dark" />
-        <h1>2025</h1>
+        <h1 id="defaultYear">2025</h1>
       </header>
       <script>if(new URLSearchParams(location.search).get("project"))document.getElementById("defaultHeader").style.display="none";</script>
       <header class="project-header" id="projectHeader" style="display:none"></header>
@@ -307,6 +307,7 @@
 
       const params = new URLSearchParams(window.location.search);
       const PROJECT_SLUG = params.get("project");
+      let PROJECT_YEAR = 2026; // will be set from Supabase
 
       // ─── Drawing ───
 
@@ -389,7 +390,8 @@
           const d2 = project.search_parameters.find(p => p.field === "d2");
           if (d1 && d2) {
             const fmt = (d) => new Date(d + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" });
-            dateRange = `<p style="color:#888;font-size:0.9rem;margin-top:4px">${fmt(d1.value)} – ${fmt(d2.value)}, 2025</p>`;
+            const year = d2.value.split("-")[0] || PROJECT_YEAR;
+            dateRange = `<p style="color:#888;font-size:0.9rem;margin-top:4px">${fmt(d1.value)} \u2013 ${fmt(d2.value)}, ${year}</p>`;
           }
         }
 
@@ -504,14 +506,21 @@
 
         // Fetch everything in parallel: project info, computed stats, live stats, live highlights
         const projectInfoPromise = fetchProjectInfo(slug);
-        const supabasePromise = db.from("cnc_projects").select("computed_stats, computed_at").eq("slug", slug).limit(1);
+        const supabasePromise = db.from("cnc_projects").select("computed_stats, computed_at, year").eq("slug", slug).limit(1);
         const liveStatsPromise = fetchLiveStats(slug);
         const liveHighlightsPromise = fetchLiveHighlightData(slug);
 
-        const projectInfo = await projectInfoPromise;
+        // Wait for Supabase to get year before rendering header
+        const [projectInfo, { data: projectData }] = await Promise.all([projectInfoPromise, supabasePromise]);
+        const stats = projectData && projectData.length > 0 ? projectData[0].computed_stats : null;
+        const computedAt = projectData && projectData.length > 0 ? projectData[0].computed_at : null;
+        if (projectData && projectData.length > 0 && projectData[0].year) {
+          PROJECT_YEAR = projectData[0].year;
+        }
+
         renderProjectHeader(projectInfo, slug);
 
-        // Render live stats immediately (no dependency on Supabase)
+        // Render live stats immediately
         let liveStats = null;
         try {
           liveStats = await liveStatsPromise;
@@ -519,11 +528,6 @@
         } catch (e) {
           console.warn("Live stats fetch failed:", e);
         }
-
-        // Render computed highlights from Supabase + live highlight data
-        const { data: projectData } = await supabasePromise;
-        const stats = projectData && projectData.length > 0 ? projectData[0].computed_stats : null;
-        const computedAt = projectData && projectData.length > 0 ? projectData[0].computed_at : null;
 
         let liveHighlights = { topSpecies: [], topIdentifiers: [], topFavorited: [], endangeredSpecies: [], endemicSpecies: [] };
         try {
@@ -534,6 +538,8 @@
 
         if (stats) {
           renderHighlights(stats, liveHighlights, computedAt);
+        } else {
+          document.getElementById("highlightsContainer").innerHTML = '<p style="text-align:center;color:#888;padding:20px">More details coming soon.</p>';
         }
 
         renderObservationMap(slug, liveStats || stats);
@@ -571,6 +577,7 @@
       async function renderObservationMap(slug, stats) {
         const mapContainer = document.getElementById("observationMap");
         const mapSubtitle = document.getElementById("mapSubtitle");
+        if (!mapContainer || !mapSubtitle) return;
 
         try {
           // 1. Get project bounding box from iNat API
@@ -797,7 +804,8 @@
           const projectSpecies = stats?.total_species || stats?.summary?.total_species || 0;
           if (placeIds.length > 0 && projectSpecies > 0) {
             try {
-              const scRes = await fetchWithRetry(`https://api.inaturalist.org/v1/observations/species_counts?place_id=${placeIds.join(",")}&per_page=0`);
+              const verifiableParam = PROJECT_YEAR >= 2026 ? "&verifiable=true" : "";
+              const scRes = await fetchWithRetry(`https://api.inaturalist.org/v1/observations/species_counts?place_id=${placeIds.join(",")}${verifiableParam}&per_page=0`);
               const scData = await scRes.json();
               const areaSpecies = scData.total_results || 0;
               if (areaSpecies > 0) {
@@ -814,8 +822,8 @@
 
         } catch (err) {
           console.error("Map error:", err);
-          mapSubtitle.innerHTML = `<div class="map-stat-card" style="grid-column:1/-1"><div class="map-stat-label">Unable to load map</div></div>`;
-          mapContainer.innerHTML = "";
+          if (mapSubtitle) mapSubtitle.innerHTML = `<div class="map-stat-card" style="grid-column:1/-1"><div class="map-stat-label">Unable to load map</div></div>`;
+          if (mapContainer) mapContainer.innerHTML = "";
         }
       }
 

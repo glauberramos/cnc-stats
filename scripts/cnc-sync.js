@@ -163,20 +163,10 @@ async function fetchProjects() {
     existingProjects.forEach((p) => { existingCounts[p.slug] = p.total_observations || 0; });
   }
 
-  // Only fetch counts from API for new projects not yet in Supabase
+  // New projects get count 0 — actual counts will be populated during observation sync
   const newProjects = projects.filter((p) => existingCounts[p.slug] === undefined);
   if (newProjects.length > 0) {
-    console.log(`Fetching observation counts for ${newProjects.length} new projects...`);
-    for (let i = 0; i < newProjects.length; i++) {
-      const p = newProjects[i];
-      const countData = await rateLimitedFetch(
-        `${API_BASE}/observations?project_id=${p.slug}&per_page=1`
-      );
-      existingCounts[p.slug] = countData.total_results || 0;
-      if ((i + 1) % 50 === 0 || i === newProjects.length - 1) {
-        console.log(`  Counted ${i + 1}/${newProjects.length} new projects`);
-      }
-    }
+    console.log(`${newProjects.length} new projects (counts will be set during sync)`);
   }
 
   projects.forEach((p) => { p.total_observations = existingCounts[p.slug] || 0; });
@@ -539,13 +529,14 @@ async function main() {
   if (!singleProject) {
     const { count } = await db
       .from("cnc_projects")
-      .select("*", { count: "exact", head: true });
+      .select("*", { count: "exact", head: true })
+      .eq("year", CNC_YEAR);
 
     if (refreshProjects || !count || count === 0) {
-      console.log(count === 0 ? "No projects in Supabase, seeding from iNat..." : "Refreshing project list from iNat...");
+      console.log(count === 0 ? `No ${CNC_YEAR} projects in Supabase, seeding from iNat...` : "Refreshing project list from iNat...");
       await fetchProjects();
     } else {
-      console.log(`Using ${count} projects from Supabase`);
+      console.log(`Using ${count} projects from Supabase (year ${CNC_YEAR})`);
     }
   }
 
@@ -563,6 +554,7 @@ async function main() {
     const { data, error } = await db
       .from("cnc_projects")
       .select("slug, place_ids, total_observations, synced_at")
+      .eq("year", CNC_YEAR)
       .order("synced_at", { ascending: true, nullsFirst: true })
       .limit(BATCH_LIMIT);
     if (error) throw new Error(`Fetch projects batch: ${error.message}`);
