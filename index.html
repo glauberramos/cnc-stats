@@ -286,8 +286,9 @@
 
         let filtered = allProjects;
         if (searchQuery) {
-          const q = searchQuery.toLowerCase();
-          filtered = allProjects.filter(p => (p.title || p.slug).toLowerCase().includes(q));
+          const norm = s => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+          const q = norm(searchQuery);
+          filtered = allProjects.filter(p => norm(p.title || p.slug).includes(q));
         }
 
         if (filtered.length === 0) {
