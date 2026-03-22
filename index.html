@@ -13,7 +13,7 @@
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
         line-height: 1.6; background: #f5f5f5; min-height: 100vh; color: #1a1a1a; padding: 40px 20px;
       }
-      .container { max-width: 840px; width: 100%; margin: 0 auto; }
+      .container { max-width: 890px; width: 100%; margin: 0 auto; }
       header { text-align: center; margin-bottom: 30px; }
       header .header-logo { height: 100px; margin-bottom: 4px; }
       header .header-logo.dark { display: none; }
@@ -374,18 +374,18 @@
           };
           const { count: projectCount } = await db.from("cnc_projects").select("*", { count: "exact", head: true }).eq("year", selectedYear);
           document.getElementById("statsBar").innerHTML = `
-            <a class="stat-card" href="${baseUrl}" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${s.total_observations.toLocaleString()}</div><div class="stat-label">Observations</div></a>
-            <a class="stat-card" href="${baseUrl}&view=species" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${s.total_species.toLocaleString()}</div><div class="stat-label">Species</div></a>
-            <div class="stat-card"><div class="stat-value">${s.total_species > 0 ? (s.total_observations / s.total_species).toFixed(1) : 0}</div><div class="stat-label">Obs/Species</div></div>
-            <div class="stat-card"><div class="stat-value">${s.total_observers > 0 ? (s.total_observations / s.total_observers).toFixed(1) : 0}</div><div class="stat-label">Obs/Person</div></div>
-            <a class="stat-card" href="${baseUrl}&quality_grade=research" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${s.research_grade.toLocaleString()}</div><div class="stat-label">Research Grade</div></a>
-            <a class="stat-card" href="${baseUrl}&quality_grade=needs_id" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${s.needs_id.toLocaleString()}</div><div class="stat-label">Needs ID</div></a>
-            <div class="stat-card"><div class="stat-value">${s.total_observations > 0 ? Math.round(s.research_grade / s.total_observations * 100) : 0}%</div><div class="stat-label">Research Grade Rate</div></div>
-            <a class="stat-card" href="${baseUrl}&view=observers" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${s.total_observers.toLocaleString()}</div><div class="stat-label">Observers</div></a>
-            <a class="stat-card" href="${baseUrl}&view=identifiers" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${s.total_identifiers.toLocaleString()}</div><div class="stat-label">Identifiers</div></a>
-            <a class="stat-card" href="${baseUrl}&threatened=true&view=species" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${s.threatened_species.toLocaleString()}</div><div class="stat-label">Threatened Species</div></a>
-            <a class="stat-card" href="${baseUrl}&endemic=true&view=species" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${s.endemic_species.toLocaleString()}</div><div class="stat-label">Endemic Species</div></a>
-            <div class="stat-card"><div class="stat-value">${(projectCount || 0).toLocaleString()}</div><div class="stat-label">Projects</div></div>
+            <a class="stat-card" href="${baseUrl}" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${s.total_observations.toLocaleString()}</div><div class="stat-label">\uD83D\uDCF7 Observations</div></a>
+            <a class="stat-card" href="${baseUrl}&view=species" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${s.total_species.toLocaleString()}</div><div class="stat-label">\uD83C\uDF3F Species</div></a>
+            <div class="stat-card"><div class="stat-value">${s.total_species > 0 ? (s.total_observations / s.total_species).toFixed(1) : 0}</div><div class="stat-label">\uD83E\uDDEC Obs/Species</div></div>
+            <div class="stat-card"><div class="stat-value">${s.total_observers > 0 ? (s.total_observations / s.total_observers).toFixed(1) : 0}</div><div class="stat-label">\uD83D\uDCCA Obs/Person</div></div>
+            <a class="stat-card" href="${baseUrl}&quality_grade=research" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${s.research_grade.toLocaleString()}</div><div class="stat-label">\u2705 Research Grade</div></a>
+            <a class="stat-card" href="${baseUrl}&quality_grade=needs_id" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${s.needs_id.toLocaleString()}</div><div class="stat-label">\uD83D\uDD0D Needs ID</div></a>
+            <div class="stat-card"><div class="stat-value">${s.total_observations > 0 ? Math.round(s.research_grade / s.total_observations * 100) : 0}%</div><div class="stat-label">\u2705 Research Grade Rate</div></div>
+            <a class="stat-card" href="${baseUrl}&view=observers" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${s.total_observers.toLocaleString()}</div><div class="stat-label">\uD83D\uDC65 Observers</div></a>
+            <a class="stat-card" href="${baseUrl}&view=identifiers" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${s.total_identifiers.toLocaleString()}</div><div class="stat-label">\uD83D\uDD0E Identifiers</div></a>
+            <a class="stat-card" href="${baseUrl}&threatened=true&view=species" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${s.threatened_species.toLocaleString()}</div><div class="stat-label">\u26A0\uFE0F Threatened</div></a>
+            <a class="stat-card" href="${baseUrl}&endemic=true&view=species" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${s.endemic_species.toLocaleString()}</div><div class="stat-label">\uD83C\uDFDD\uFE0F Endemic</div></a>
+            <div class="stat-card"><div class="stat-value">${(projectCount || 0).toLocaleString()}</div><div class="stat-label">\uD83C\uDFD9\uFE0F Projects</div></div>
           `;
         } catch (e) {
           console.error("Failed to fetch umbrella stats:", e);
