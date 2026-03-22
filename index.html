@@ -11,109 +11,64 @@
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-        line-height: 1.6; background: #f5f5f5; min-height: 100vh; color: #1a1a1a; padding: 40px 20px;
+        line-height: 1.6; background: #f5f5f5; min-height: 100vh; color: #1a1a1a; padding: 0;
       }
-      .container { max-width: 890px; width: 100%; margin: 0 auto; }
-      header { text-align: center; margin-bottom: 30px; }
-      header .header-logo { height: 100px; margin-bottom: 4px; }
-      header .header-logo.dark { display: none; }
-      body.dark-mode header .header-logo.light { display: none; }
-      body.dark-mode header .header-logo.dark { display: inline; }
-      header h1 { font-size: 1.5rem; color: #1a1a1a; margin-bottom: 4px; font-weight: 900; letter-spacing: -0.5px; }
-      header p { color: #555; font-size: 1rem; margin-bottom: 0; }
-      .project-list { display: flex; flex-direction: column; gap: 0; }
-      .project-link {
-        display: flex; align-items: center; gap: 16px; padding: 14px 20px;
-        background: white; text-decoration: none; color: inherit;
-        border-bottom: 1px solid #e0e0e0;
-        transition: background 0.2s;
-      }
-      .project-link:first-child { border-top: 1px solid #e0e0e0; }
-      .project-link:hover { background: #e8f5e9; }
-      .project-link img { width: 44px; height: 44px; border-radius: 10px; object-fit: cover; }
-      .project-link .pl-info { flex: 1; min-width: 0; }
-      .project-link .pl-title { font-size: 1rem; font-weight: 700; color: #1a1a1a; }
-      .project-link .pl-slug { font-size: 0.8rem; color: #888; }
-      .project-link .pl-stats { font-size: 0.85rem; color: #2E7D32; font-weight: 700; white-space: nowrap; }
-      .loading { text-align: center; padding: 40px; color: #888; }
-      .load-more-btn {
-        display: block; width: 100%; padding: 14px; margin-top: 12px;
-        background: white; border: 2px solid #2E7D32; border-radius: 30px;
-        font-size: 0.95rem; font-weight: 700; color: #2E7D32; cursor: pointer;
-        transition: all 0.2s;
-      }
-      .load-more-btn:hover { background: #e8f5e9; }
-      .load-more-btn .spinner-sm {
-        display: inline-block; width: 16px; height: 16px; vertical-align: middle;
-        border: 2px solid #e0e0e0; border-top-color: #2E7D32;
-        border-radius: 50%; animation: pulse-spin 0.8s linear infinite;
-      }
-      @keyframes pulse-spin { to { transform: rotate(360deg); } }
-      body.dark-mode .load-more-btn { background: #2d2d2d; border-color: #4a8c50; color: #6abf69; }
-      body.dark-mode .load-more-btn:hover { background: #2a3a2a; }
-      .skeleton-bar {
-        height: 14px; background: #e8e8e8; border-radius: 4px; animation: pulse 1.5s ease-in-out infinite;
-      }
-      .skeleton-item {
-        display: flex; align-items: center; gap: 16px; padding: 14px 20px;
-        background: white; border-bottom: 1px solid #e0e0e0;
-      }
-      .skeleton-item:first-child { border-top: 1px solid #e0e0e0; }
-      .skeleton-icon {
-        width: 44px; height: 44px; border-radius: 10px; background: #e8e8e8;
-        animation: pulse 1.5s ease-in-out infinite; flex-shrink: 0;
-      }
-      .skeleton-info { flex: 1; display: flex; flex-direction: column; gap: 8px; }
-      @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+      .container { max-width: 890px; width: 100%; margin: 0 auto; padding: 24px 20px 28px; background: white; border-radius: 14px; border: 1px solid #e0e0e0; }
+      .container .section-label:first-child { margin-top: 0; }
 
-      /* Dark mode */
-      body.dark-mode { background: #1a1a1a; color: #e0e0e0; }
-      body.dark-mode header h1 { color: #e0e0e0; }
-      body.dark-mode header p { color: #999; }
-      body.dark-mode .project-link { background: #1a1a1a; border-bottom-color: #333; }
-      body.dark-mode .project-link:first-child { border-top-color: #333; }
-      body.dark-mode .project-link:hover { background: #1e2e1e; }
-      body.dark-mode .project-link .pl-title { color: #e0e0e0; }
-      body.dark-mode .project-link .pl-slug { color: #888; }
-      body.dark-mode .project-link .pl-stats { color: #6abf69; }
-      body.dark-mode .skeleton-item { background: #1a1a1a; border-bottom-color: #333; }
-      body.dark-mode .skeleton-item:first-child { border-top-color: #333; }
-      body.dark-mode .skeleton-icon { background: #3d3d3d; }
-      body.dark-mode .skeleton-bar { background: #3d3d3d; }
-      .search-box {
-        width: 100%; padding: 12px 16px; font-size: 1rem; border: 1px solid #ccc;
-        border-radius: 8px; background: white; color: #1a1a1a; margin-bottom: 20px;
-        outline: none; transition: border-color 0.2s;
+      /* Hero */
+      .hero {
+        padding: 48px 20px 40px; text-align: center; color: #1a1a1a;
       }
-      .search-box:focus { border-color: #2E7D32; }
-      .search-box::placeholder { color: #aaa; }
+      .hero .header-logo { height: 100px; margin-bottom: 8px; position: relative; }
+      .hero .header-logo.light { display: inline; }
+      .hero .header-logo.dark { display: none; }
+      .hero-date { color: #555; font-size: 0.95rem; margin-top: 4px; position: relative; }
       .year-select {
         font-size: 0.9rem; font-weight: 700; padding: 3px 6px; border-radius: 6px;
-        border: 1.5px solid #ccc; background: white; color: #555; cursor: pointer;
-        outline: none; vertical-align: baseline;
+        border: 1.5px solid #ccc; background: rgba(0,0,0,0.05);
+        color: #1a1a1a; cursor: pointer; outline: none; vertical-align: baseline;
       }
-      .year-select:hover { border-color: #2E7D32; color: #2E7D32; }
-      body.dark-mode .year-select { background: #333; border-color: #555; color: #aaa; }
-      body.dark-mode .year-select:hover { border-color: #6abf69; color: #6abf69; }
-      body.dark-mode .search-box { background: #2d2d2d; border-color: #555; color: #e0e0e0; }
-      body.dark-mode .search-box::placeholder { color: #666; }
-      body.dark-mode .search-box:focus { border-color: #4a8c50; }
-      .no-results { text-align: center; padding: 30px; color: #888; font-size: 0.95rem; }
+      .year-select:hover { border-color: #999; background: rgba(0,0,0,0.1); }
+      .year-select option { background: #2d2d2d; color: #e0e0e0; }
 
-      /* Stats bar */
-      .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
-      .stat-card {
-        background: white; border-radius: 14px; padding: 18px 20px;
-        text-align: center; border: 1px solid #e0e0e0;
+      /* Highlight stats (top row) */
+      .highlight-stats {
+        display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+        max-width: 890px; margin: 0 auto 20px; padding: 0 20px; position: relative; z-index: 1;
       }
-      .stat-card .stat-value { font-size: 2rem; font-weight: 900; color: #2E7D32; }
-      .stat-card .stat-label { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
-      body.dark-mode .stat-card { background: #2d2d2d; border-color: #444; }
-      body.dark-mode .stat-card .stat-value { color: #6abf69; }
-      body.dark-mode .stat-card .stat-label { color: #999; }
+      .hl-card {
+        background: white; padding: 20px 16px; text-align: center;
+        border: 1px solid #e0e0e0; border-radius: 14px; text-decoration: none; color: inherit;
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+      .hl-card:hover { transform: translateY(-3px); box-shadow: 0 6px 16px rgba(0,0,0,0.1); z-index: 1; }
+      .hl-card .hl-value { font-size: 1.8rem; font-weight: 900; color: #2E7D32; line-height: 1.2; }
+      .hl-card .hl-label { font-size: 0.7rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-top: 6px; }
+      @media (max-width: 480px) {
+        .highlight-stats { grid-template-columns: repeat(2, 1fr); }
+        .hl-card { padding: 14px 10px; }
+        .hl-card .hl-value { font-size: 1.4rem; }
+      }
+
+      /* Detail stats */
+      .section-label {
+        font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+        color: #999; margin: 40px 0 12px; padding-left: 4px;
+      }
+      .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 24px; }
+      .stat-card {
+        background: white; border-radius: 12px; padding: 14px 12px;
+        text-align: center; border: 1px solid #e0e0e0;
+        text-decoration: none; color: inherit; display: block;
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+      .stat-card:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+      .stat-card .stat-value { font-size: 1.5rem; font-weight: 900; color: #2E7D32; }
+      .stat-card .stat-label { font-size: 0.65rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
       @media (max-width: 480px) {
         .stats-bar { grid-template-columns: repeat(2, 1fr); }
-        .stat-card .stat-value { font-size: 1.4rem; }
+        .stat-card .stat-value { font-size: 1.2rem; }
       }
 
       /* First observations */
@@ -146,61 +101,171 @@
       }
       .fo-badge-global { background: linear-gradient(135deg,#FFD700,#FFA000); color: #333; box-shadow: 0 1px 3px rgba(255,160,0,0.3); }
       .fo-badge-local { background: linear-gradient(135deg,#4CAF50,#2E7D32); color: #fff; box-shadow: 0 1px 3px rgba(46,125,50,0.3); }
-      body.dark-mode .first-obs-card { background: #2d2d2d; border-color: #444; }
-      body.dark-mode .first-obs-card h3 { color: #e0e0e0; border-bottom-color: #444; }
-      body.dark-mode .first-obs-card h3 .highlight-count { background: rgba(46,125,50,0.3); color: #6abf69; }
-      body.dark-mode .first-obs-item:hover { background: #3d3d3d; }
-      body.dark-mode .first-obs-item .fo-name { color: #e0e0e0; }
+
+      /* Project list */
+      .project-list-container { margin-top: 8px; }
+      .search-box {
+        width: 100%; padding: 12px 16px 12px 42px; font-size: 1rem; border: 1px solid #ccc;
+        border-radius: 12px; background: white; color: #1a1a1a; margin-bottom: 16px;
+        outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+      }
+      .search-box:focus { border-color: #2E7D32; box-shadow: 0 0 0 3px rgba(46,125,50,0.1); }
+      .search-box::placeholder { color: #aaa; }
+      .search-wrapper { position: relative; }
+      .search-icon {
+        position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+        color: #aaa; font-size: 1.1rem; pointer-events: none;
+      }
+      .project-list {
+        display: flex; flex-direction: column; gap: 0;
+        border-radius: 12px; overflow: hidden; border: 1px solid #e0e0e0;
+      }
+      .project-link {
+        display: flex; align-items: center; gap: 16px; padding: 14px 20px;
+        background: white; text-decoration: none; color: inherit;
+        border-bottom: 1px solid #f0f0f0;
+        transition: background 0.2s;
+      }
+      .project-link:last-child { border-bottom: none; }
+      .project-link:hover { background: #f0faf0; }
+      .project-link img { width: 44px; height: 44px; border-radius: 10px; object-fit: cover; }
+      .project-link .pl-info { flex: 1; min-width: 0; }
+      .project-link .pl-title { font-size: 1rem; font-weight: 700; color: #1a1a1a; }
+      .project-link .pl-slug { font-size: 0.8rem; color: #888; }
+      .project-link .pl-stats { font-size: 0.85rem; color: #2E7D32; font-weight: 700; white-space: nowrap; }
+      .loading { text-align: center; padding: 40px; color: #888; }
+      .load-more-btn {
+        display: block; width: 100%; padding: 14px; margin-top: 12px;
+        background: white; border: 2px solid #2E7D32; border-radius: 30px;
+        font-size: 0.95rem; font-weight: 700; color: #2E7D32; cursor: pointer;
+        transition: all 0.2s;
+      }
+      .load-more-btn:hover { background: #e8f5e9; }
+      .load-more-btn .spinner-sm {
+        display: inline-block; width: 16px; height: 16px; vertical-align: middle;
+        border: 2px solid #e0e0e0; border-top-color: #2E7D32;
+        border-radius: 50%; animation: pulse-spin 0.8s linear infinite;
+      }
+      @keyframes pulse-spin { to { transform: rotate(360deg); } }
+      .no-results { text-align: center; padding: 30px; color: #888; font-size: 0.95rem; }
+
+      /* Skeletons */
+      .skeleton-bar {
+        height: 14px; background: #e8e8e8; border-radius: 4px; animation: pulse 1.5s ease-in-out infinite;
+      }
+      .skeleton-item {
+        display: flex; align-items: center; gap: 16px; padding: 14px 20px;
+        background: white; border-bottom: 1px solid #f0f0f0;
+      }
+      .skeleton-icon {
+        width: 44px; height: 44px; border-radius: 10px; background: #e8e8e8;
+        animation: pulse 1.5s ease-in-out infinite; flex-shrink: 0;
+      }
+      .skeleton-info { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+      @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
       /* Footer */
       .site-footer {
         background: #1a1a1a; margin-top: 60px; padding: 40px 20px; text-align: center;
-        margin-left: -20px; margin-right: -20px; margin-bottom: -40px;
       }
       .site-footer img { height: 180px; opacity: 0.9; }
       .site-footer p { color: #666; font-size: 0.85rem; margin-top: 16px; letter-spacing: 0.3px; }
       .site-footer a { color: #6abf69; text-decoration: none; font-weight: 600; }
       .site-footer a:hover { text-decoration: underline; }
+
+      /* Dark mode */
+      body.dark-mode { background: #121212; color: #e0e0e0; }
+      body.dark-mode .container { background: #1a1a1a; border-color: #333; }
+      body.dark-mode .hero { background: none; color: white; }
+      body.dark-mode .hero .header-logo.light { display: none; }
+      body.dark-mode .hero .header-logo.dark { display: inline; }
+      body.dark-mode .hero-date { color: rgba(255,255,255,0.7); }
+      body.dark-mode .year-select { border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.15); color: white; }
+      body.dark-mode .year-select:hover { border-color: white; background: rgba(255,255,255,0.25); }
+      body.dark-mode .hl-card { background: #2d2d2d; border-color: #333; }
+      body.dark-mode .hl-card .hl-value { color: #6abf69; }
+      body.dark-mode .hl-card .hl-label { color: #888; }
+      body.dark-mode .section-label { color: #666; }
+      body.dark-mode .stat-card { background: #2d2d2d; border-color: #333; }
+      body.dark-mode .stat-card .stat-value { color: #6abf69; }
+      body.dark-mode .stat-card .stat-label { color: #888; }
+      body.dark-mode .first-obs-card { background: #2d2d2d; border-color: #333; }
+      body.dark-mode .first-obs-card h3 { color: #e0e0e0; border-bottom-color: #333; }
+      body.dark-mode .first-obs-card h3 .highlight-count { background: rgba(46,125,50,0.3); color: #6abf69; }
+      body.dark-mode .first-obs-item:hover { background: #2a2a2a; }
+      body.dark-mode .first-obs-item .fo-name { color: #e0e0e0; }
+      body.dark-mode .search-box { background: #2d2d2d; border-color: #333; color: #e0e0e0; }
+      body.dark-mode .search-box::placeholder { color: #666; }
+      body.dark-mode .search-box:focus { border-color: #4a8c50; box-shadow: 0 0 0 3px rgba(46,125,50,0.2); }
+      body.dark-mode .search-icon { color: #666; }
+      body.dark-mode .project-list { border-color: #333; }
+      body.dark-mode .project-link { background: #2d2d2d; border-bottom-color: #282828; }
+      body.dark-mode .project-link:hover { background: #1e2e1e; }
+      body.dark-mode .project-link .pl-title { color: #e0e0e0; }
+      body.dark-mode .project-link .pl-slug { color: #666; }
+      body.dark-mode .project-link .pl-stats { color: #6abf69; }
+      body.dark-mode .skeleton-item { background: #2d2d2d; border-bottom-color: #282828; }
+      body.dark-mode .skeleton-icon { background: #3a3a3a; }
+      body.dark-mode .skeleton-bar { background: #3a3a3a; }
+      body.dark-mode .load-more-btn { background: #2d2d2d; border-color: #4a8c50; color: #6abf69; }
+      body.dark-mode .load-more-btn:hover { background: #1e2e1e; }
+
+      @media (max-width: 480px) {
+        .hero { padding: 36px 16px 32px; }
+        .hero .header-logo { height: 80px; }
+        .highlight-stats { margin-top: -20px; padding: 0 16px; }
+        .hl-card { padding: 14px 10px; }
+      }
     </style>
   </head>
   <body>
+    <div class="hero">
+      <img src="CNC_Logo_Knockout.png" alt="City Nature Challenge" class="header-logo dark" />
+      <img src="CNC_Logo_Grayscale.png" alt="City Nature Challenge" class="header-logo light" />
+      <p class="hero-date">
+        <span id="dateRange"></span>
+        <select id="yearSelect" class="year-select" onchange="onYearChange(this.value)">
+          <option value="2026">2026</option>
+          <option value="2025">2025</option>
+        </select>
+      </p>
+    </div>
+
+    <div id="highlightStats" class="highlight-stats">
+      <div class="hl-card"><div class="skeleton-bar" style="width:60%;height:24px;margin:0 auto 8px"></div><div class="skeleton-bar" style="width:80%;height:8px;margin:0 auto"></div></div>
+      <div class="hl-card"><div class="skeleton-bar" style="width:50%;height:24px;margin:0 auto 8px"></div><div class="skeleton-bar" style="width:70%;height:8px;margin:0 auto"></div></div>
+      <div class="hl-card"><div class="skeleton-bar" style="width:55%;height:24px;margin:0 auto 8px"></div><div class="skeleton-bar" style="width:75%;height:8px;margin:0 auto"></div></div>
+      <div class="hl-card"><div class="skeleton-bar" style="width:45%;height:24px;margin:0 auto 8px"></div><div class="skeleton-bar" style="width:85%;height:8px;margin:0 auto"></div></div>
+    </div>
+
     <div class="container">
-      <header>
-        <img src="CNC_Logo_Grayscale.png" alt="City Nature Challenge" class="header-logo light" />
-        <img src="CNC_Logo_Knockout.png" alt="City Nature Challenge" class="header-logo dark" />
-        <p style="color:#888;font-size:0.9rem;margin-top:4px">
-          <span id="dateRange"></span>
-          <select id="yearSelect" class="year-select" onchange="onYearChange(this.value)">
-            <option value="2026">2026</option>
-            <option value="2025">2025</option>
-          </select>
-        </p>
-        <p id="subtitle"></p>
-      </header>
+      <div class="section-label">Quality & Engagement</div>
       <div id="statsBar" class="stats-bar">
-        <div class="stat-card"><div class="skeleton-bar" style="width:60%;height:28px;margin:0 auto 8px"></div><div class="skeleton-bar" style="width:80%;height:10px;margin:0 auto"></div></div>
-        <div class="stat-card"><div class="skeleton-bar" style="width:50%;height:28px;margin:0 auto 8px"></div><div class="skeleton-bar" style="width:70%;height:10px;margin:0 auto"></div></div>
-        <div class="stat-card"><div class="skeleton-bar" style="width:40%;height:28px;margin:0 auto 8px"></div><div class="skeleton-bar" style="width:90%;height:10px;margin:0 auto"></div></div>
-        <div class="stat-card"><div class="skeleton-bar" style="width:45%;height:28px;margin:0 auto 8px"></div><div class="skeleton-bar" style="width:75%;height:10px;margin:0 auto"></div></div>
-        <div class="stat-card"><div class="skeleton-bar" style="width:55%;height:28px;margin:0 auto 8px"></div><div class="skeleton-bar" style="width:85%;height:10px;margin:0 auto"></div></div>
-        <div class="stat-card"><div class="skeleton-bar" style="width:35%;height:28px;margin:0 auto 8px"></div><div class="skeleton-bar" style="width:90%;height:10px;margin:0 auto"></div></div>
-        <div class="stat-card"><div class="skeleton-bar" style="width:50%;height:28px;margin:0 auto 8px"></div><div class="skeleton-bar" style="width:70%;height:10px;margin:0 auto"></div></div>
-        <div class="stat-card"><div class="skeleton-bar" style="width:45%;height:28px;margin:0 auto 8px"></div><div class="skeleton-bar" style="width:80%;height:10px;margin:0 auto"></div></div>
-        <div class="stat-card"><div class="skeleton-bar" style="width:50%;height:28px;margin:0 auto 8px"></div><div class="skeleton-bar" style="width:85%;height:10px;margin:0 auto"></div></div>
-        <div class="stat-card"><div class="skeleton-bar" style="width:40%;height:28px;margin:0 auto 8px"></div><div class="skeleton-bar" style="width:75%;height:10px;margin:0 auto"></div></div>
-        <div class="stat-card"><div class="skeleton-bar" style="width:55%;height:28px;margin:0 auto 8px"></div><div class="skeleton-bar" style="width:70%;height:10px;margin:0 auto"></div></div>
-        <div class="stat-card"><div class="skeleton-bar" style="width:45%;height:28px;margin:0 auto 8px"></div><div class="skeleton-bar" style="width:80%;height:10px;margin:0 auto"></div></div>
+        <div class="stat-card"><div class="skeleton-bar" style="width:50%;height:20px;margin:0 auto 6px"></div><div class="skeleton-bar" style="width:80%;height:8px;margin:0 auto"></div></div>
+        <div class="stat-card"><div class="skeleton-bar" style="width:40%;height:20px;margin:0 auto 6px"></div><div class="skeleton-bar" style="width:70%;height:8px;margin:0 auto"></div></div>
+        <div class="stat-card"><div class="skeleton-bar" style="width:55%;height:20px;margin:0 auto 6px"></div><div class="skeleton-bar" style="width:85%;height:8px;margin:0 auto"></div></div>
+        <div class="stat-card"><div class="skeleton-bar" style="width:45%;height:20px;margin:0 auto 6px"></div><div class="skeleton-bar" style="width:75%;height:8px;margin:0 auto"></div></div>
+        <div class="stat-card"><div class="skeleton-bar" style="width:50%;height:20px;margin:0 auto 6px"></div><div class="skeleton-bar" style="width:80%;height:8px;margin:0 auto"></div></div>
+        <div class="stat-card"><div class="skeleton-bar" style="width:40%;height:20px;margin:0 auto 6px"></div><div class="skeleton-bar" style="width:70%;height:8px;margin:0 auto"></div></div>
+        <div class="stat-card"><div class="skeleton-bar" style="width:55%;height:20px;margin:0 auto 6px"></div><div class="skeleton-bar" style="width:85%;height:8px;margin:0 auto"></div></div>
+        <div class="stat-card"><div class="skeleton-bar" style="width:45%;height:20px;margin:0 auto 6px"></div><div class="skeleton-bar" style="width:75%;height:8px;margin:0 auto"></div></div>
       </div>
+
       <div id="firstObsContainer"></div>
-      <input type="text" id="searchBox" class="search-box" placeholder="Search projects..." oninput="onSearch(this.value)" />
-      <div id="projectList" class="project-list">
-        <div class="skeleton-item"><div class="skeleton-icon"></div><div class="skeleton-info"><div class="skeleton-bar" style="width:60%;height:14px"></div><div class="skeleton-bar" style="width:40%;height:10px"></div></div><div class="skeleton-bar" style="width:60px;height:14px"></div></div>
-        <div class="skeleton-item"><div class="skeleton-icon"></div><div class="skeleton-info"><div class="skeleton-bar" style="width:70%;height:14px"></div><div class="skeleton-bar" style="width:35%;height:10px"></div></div><div class="skeleton-bar" style="width:60px;height:14px"></div></div>
-        <div class="skeleton-item"><div class="skeleton-icon"></div><div class="skeleton-info"><div class="skeleton-bar" style="width:50%;height:14px"></div><div class="skeleton-bar" style="width:45%;height:10px"></div></div><div class="skeleton-bar" style="width:60px;height:14px"></div></div>
-        <div class="skeleton-item"><div class="skeleton-icon"></div><div class="skeleton-info"><div class="skeleton-bar" style="width:65%;height:14px"></div><div class="skeleton-bar" style="width:38%;height:10px"></div></div><div class="skeleton-bar" style="width:60px;height:14px"></div></div>
-        <div class="skeleton-item"><div class="skeleton-icon"></div><div class="skeleton-info"><div class="skeleton-bar" style="width:55%;height:14px"></div><div class="skeleton-bar" style="width:42%;height:10px"></div></div><div class="skeleton-bar" style="width:60px;height:14px"></div></div>
-        <div class="skeleton-item"><div class="skeleton-icon"></div><div class="skeleton-info"><div class="skeleton-bar" style="width:58%;height:14px"></div><div class="skeleton-bar" style="width:36%;height:10px"></div></div><div class="skeleton-bar" style="width:60px;height:14px"></div></div>
-        <div class="skeleton-item"><div class="skeleton-icon"></div><div class="skeleton-info"><div class="skeleton-bar" style="width:63%;height:14px"></div><div class="skeleton-bar" style="width:41%;height:10px"></div></div><div class="skeleton-bar" style="width:60px;height:14px"></div></div>
+
+      <div class="project-list-container">
+        <div class="section-label" id="projectsLabel">Participating Projects</div>
+        <div class="search-wrapper">
+          <span class="search-icon">&#128269;</span>
+          <input type="text" id="searchBox" class="search-box" placeholder="Search projects..." oninput="onSearch(this.value)" />
+        </div>
+        <div id="projectList" class="project-list">
+          <div class="skeleton-item"><div class="skeleton-icon"></div><div class="skeleton-info"><div class="skeleton-bar" style="width:60%;height:14px"></div><div class="skeleton-bar" style="width:40%;height:10px"></div></div><div class="skeleton-bar" style="width:60px;height:14px"></div></div>
+          <div class="skeleton-item"><div class="skeleton-icon"></div><div class="skeleton-info"><div class="skeleton-bar" style="width:70%;height:14px"></div><div class="skeleton-bar" style="width:35%;height:10px"></div></div><div class="skeleton-bar" style="width:60px;height:14px"></div></div>
+          <div class="skeleton-item"><div class="skeleton-icon"></div><div class="skeleton-info"><div class="skeleton-bar" style="width:50%;height:14px"></div><div class="skeleton-bar" style="width:45%;height:10px"></div></div><div class="skeleton-bar" style="width:60px;height:14px"></div></div>
+          <div class="skeleton-item"><div class="skeleton-icon"></div><div class="skeleton-info"><div class="skeleton-bar" style="width:65%;height:14px"></div><div class="skeleton-bar" style="width:38%;height:10px"></div></div><div class="skeleton-bar" style="width:60px;height:14px"></div></div>
+          <div class="skeleton-item"><div class="skeleton-icon"></div><div class="skeleton-info"><div class="skeleton-bar" style="width:55%;height:14px"></div><div class="skeleton-bar" style="width:42%;height:10px"></div></div><div class="skeleton-bar" style="width:60px;height:14px"></div></div>
+        </div>
       </div>
     </div>
 
@@ -226,7 +291,6 @@
       if (!YEAR_CONFIG[selectedYear]) selectedYear = 2026;
       localStorage.setItem("cncYear", selectedYear);
 
-      // Set dropdown and header
       document.getElementById("yearSelect").value = selectedYear;
       document.getElementById("dateRange").textContent = YEAR_CONFIG[selectedYear].dates;
       document.title = `CNC ${selectedYear} Projects`;
@@ -373,19 +437,25 @@
             endemic_species: endemicData.total_results || 0,
           };
           const { count: projectCount } = await db.from("cnc_projects").select("*", { count: "exact", head: true }).eq("year", selectedYear);
+
+          // Hero highlight stats
+          document.getElementById("highlightStats").innerHTML = `
+            <a class="hl-card" href="${baseUrl}" target="_blank"><div class="hl-value">${s.total_observations.toLocaleString()}</div><div class="hl-label">\uD83D\uDCF7 Observations</div></a>
+            <a class="hl-card" href="${baseUrl}&view=species" target="_blank"><div class="hl-value">${s.total_species.toLocaleString()}</div><div class="hl-label">\uD83C\uDF3F Species</div></a>
+            <a class="hl-card" href="${baseUrl}&view=observers" target="_blank"><div class="hl-value">${s.total_observers.toLocaleString()}</div><div class="hl-label">\uD83D\uDC65 Observers</div></a>
+            <div class="hl-card"><div class="hl-value">${(projectCount || 0).toLocaleString()}</div><div class="hl-label">\uD83C\uDFD9\uFE0F Projects</div></div>
+          `;
+
+          // Detail stats
           document.getElementById("statsBar").innerHTML = `
-            <a class="stat-card" href="${baseUrl}" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${s.total_observations.toLocaleString()}</div><div class="stat-label">\uD83D\uDCF7 Observations</div></a>
-            <a class="stat-card" href="${baseUrl}&view=species" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${s.total_species.toLocaleString()}</div><div class="stat-label">\uD83C\uDF3F Species</div></a>
+            <a class="stat-card" href="${baseUrl}&quality_grade=research" target="_blank"><div class="stat-value">${s.research_grade.toLocaleString()}</div><div class="stat-label">\u2705 Research Grade</div></a>
+            <a class="stat-card" href="${baseUrl}&quality_grade=needs_id" target="_blank"><div class="stat-value">${s.needs_id.toLocaleString()}</div><div class="stat-label">\uD83D\uDD0D Needs ID</div></a>
+            <div class="stat-card"><div class="stat-value">${s.total_observations > 0 ? Math.round(s.research_grade / s.total_observations * 100) : 0}%</div><div class="stat-label">\u2705 Research Grade Rate</div></div>
+            <a class="stat-card" href="${baseUrl}&view=identifiers" target="_blank"><div class="stat-value">${s.total_identifiers.toLocaleString()}</div><div class="stat-label">\uD83D\uDD0E Identifiers</div></a>
             <div class="stat-card"><div class="stat-value">${s.total_species > 0 ? (s.total_observations / s.total_species).toFixed(1) : 0}</div><div class="stat-label">\uD83E\uDDEC Obs/Species</div></div>
             <div class="stat-card"><div class="stat-value">${s.total_observers > 0 ? (s.total_observations / s.total_observers).toFixed(1) : 0}</div><div class="stat-label">\uD83D\uDCCA Obs/Person</div></div>
-            <a class="stat-card" href="${baseUrl}&quality_grade=research" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${s.research_grade.toLocaleString()}</div><div class="stat-label">\u2705 Research Grade</div></a>
-            <a class="stat-card" href="${baseUrl}&quality_grade=needs_id" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${s.needs_id.toLocaleString()}</div><div class="stat-label">\uD83D\uDD0D Needs ID</div></a>
-            <div class="stat-card"><div class="stat-value">${s.total_observations > 0 ? Math.round(s.research_grade / s.total_observations * 100) : 0}%</div><div class="stat-label">\u2705 Research Grade Rate</div></div>
-            <a class="stat-card" href="${baseUrl}&view=observers" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${s.total_observers.toLocaleString()}</div><div class="stat-label">\uD83D\uDC65 Observers</div></a>
-            <a class="stat-card" href="${baseUrl}&view=identifiers" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${s.total_identifiers.toLocaleString()}</div><div class="stat-label">\uD83D\uDD0E Identifiers</div></a>
-            <a class="stat-card" href="${baseUrl}&threatened=true&view=species" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${s.threatened_species.toLocaleString()}</div><div class="stat-label">\u26A0\uFE0F Threatened</div></a>
-            <a class="stat-card" href="${baseUrl}&endemic=true&view=species" target="_blank" style="text-decoration:none;color:inherit"><div class="stat-value">${s.endemic_species.toLocaleString()}</div><div class="stat-label">\uD83C\uDFDD\uFE0F Endemic</div></a>
-            <div class="stat-card"><div class="stat-value">${(projectCount || 0).toLocaleString()}</div><div class="stat-label">\uD83C\uDFD9\uFE0F Projects</div></div>
+            <a class="stat-card" href="${baseUrl}&threatened=true&view=species" target="_blank"><div class="stat-value">${s.threatened_species.toLocaleString()}</div><div class="stat-label">\u26A0\uFE0F Threatened</div></a>
+            <a class="stat-card" href="${baseUrl}&endemic=true&view=species" target="_blank"><div class="stat-value">${s.endemic_species.toLocaleString()}</div><div class="stat-label">\uD83C\uDFDD\uFE0F Endemic</div></a>
           `;
         } catch (e) {
           console.error("Failed to fetch umbrella stats:", e);
@@ -395,7 +465,6 @@
 
       // Aggregate first observations (research grade, global firsts) across all projects
       async function renderGlobalFirstObs() {
-        // Wait for allProjects to be loaded
         if (!allProjects) {
           allProjects = await fetchAllProjects();
         }
@@ -416,6 +485,7 @@
 
         const container = document.getElementById("firstObsContainer");
         container.innerHTML = `
+          <div class="section-label">Discoveries</div>
           <div class="first-obs-card">
             <h3>\u2B50 First Global Observations <span class="highlight-count">${globalFirsts.length} species</span></h3>
             <div style="max-height:560px;overflow-y:auto">
