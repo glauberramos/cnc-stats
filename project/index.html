@@ -21,6 +21,17 @@
         overflow-x: hidden;
       }
       .container { max-width: 1200px; width: 100%; margin: 0 auto; overflow-x: hidden; }
+
+      /* Focus visible */
+      :focus-visible { outline: 2px solid #2E7D32; outline-offset: 2px; }
+      body.dark-mode :focus-visible { outline-color: #6abf69; }
+
+      /* Visually hidden (screen reader only) */
+      .visually-hidden {
+        position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+        overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+      }
+
       .back-button {
         position: fixed; top: 20px; left: 20px;
         background: white; color: #2E7D32; text-decoration: none;
@@ -270,14 +281,17 @@
     </style>
   </head>
   <body>
-    <a href="/cnc-stats/" class="back-button"><span style="font-size:1rem">&#8592;</span> Projects</a>
+    <nav aria-label="Main navigation">
+      <a href="/cnc-stats/" class="back-button" aria-label="Back to projects list"><span style="font-size:1rem" aria-hidden="true">&#8592;</span> Projects</a>
+    </nav>
 
-    <div class="container">
+    <main class="container">
       <header id="defaultHeader">
         <img src="../CNC_Logo_Grayscale.png" alt="City Nature Challenge" class="header-logo light" />
         <img src="../CNC_Logo_Knockout.png" alt="City Nature Challenge" class="header-logo dark" />
         <h1 id="defaultYear">2025</h1>
       </header>
+      <h1 class="visually-hidden" id="projectPageTitle">City Nature Challenge Project</h1>
       <script>if(new URLSearchParams(location.search).get("project"))document.getElementById("defaultHeader").style.display="none";</script>
       <header class="project-header" id="projectHeader" style="display:none"></header>
 
@@ -299,7 +313,7 @@
           <div class="stat-card"><div class="skeleton-bar lg"></div><div class="skeleton-bar sm"></div></div>
         </div>
 
-        <div class="section-title">Project Highlights</div>
+        <h2 class="section-title">Project Highlights</h2>
         <div id="highlightsContainer">
           <div class="highlights-grid">
             <div class="highlight-card"><h3><div class="skeleton-bar" style="width:60%;height:14px"></div></h3><div class="skeleton-bar" style="width:90%;height:10px;margin-bottom:10px"></div><div class="skeleton-bar" style="width:80%;height:10px;margin-bottom:10px"></div><div class="skeleton-bar" style="width:70%;height:10px"></div></div>
@@ -308,7 +322,7 @@
         </div>
 
       </div>
-    </div>
+    </main>
 
     <script src="../dark-mode.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -923,11 +937,11 @@
                 }
                 let listHtml = '<div class="scrollable-list">';
                 if (rgObs.length > 0) {
-                  listHtml += '<div class="group-header group-header-rg" onclick="const c=this.nextElementSibling;const a=this.querySelector(\'.collapse-arrow\');if(c.style.display===\'none\'){c.style.display=\'\';a.textContent=\'\\u25B2\'}else{c.style.display=\'none\';a.textContent=\'\\u25BC\'}">\u2705 Research Grade (' + rgObs.length + ')<span class="collapse-arrow">\u25B2</span></div>';
+                  listHtml += '<div class="group-header group-header-rg" role="button" tabindex="0" aria-expanded="true" aria-label="Research Grade observations" onclick="const c=this.nextElementSibling;const a=this.querySelector(\'.collapse-arrow\');if(c.style.display===\'none\'){c.style.display=\'\';a.textContent=\'\\u25B2\';this.setAttribute(\'aria-expanded\',\'true\')}else{c.style.display=\'none\';a.textContent=\'\\u25BC\';this.setAttribute(\'aria-expanded\',\'false\')}" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();this.click()}">\u2705 Research Grade (' + rgObs.length + ')<span class="collapse-arrow" aria-hidden="true">\u25B2</span></div>';
                   listHtml += '<div>' + rgObs.map(firstObsItemHtml).join("") + '</div>';
                 }
                 if (needsIdObs.length > 0) {
-                  listHtml += '<div class="group-header group-header-needs-id' + (rgObs.length > 0 ? ' group-header-mt' : '') + '" onclick="const c=this.nextElementSibling;const a=this.querySelector(\'.collapse-arrow\');if(c.style.display===\'none\'){c.style.display=\'\';a.textContent=\'\\u25B2\'}else{c.style.display=\'none\';a.textContent=\'\\u25BC\'}">\u{1F50D} Needs ID (' + needsIdObs.length + ')<span class="collapse-arrow">\u25B2</span></div>';
+                  listHtml += '<div class="group-header group-header-needs-id' + (rgObs.length > 0 ? ' group-header-mt' : '') + '" role="button" tabindex="0" aria-expanded="true" aria-label="Needs ID observations" onclick="const c=this.nextElementSibling;const a=this.querySelector(\'.collapse-arrow\');if(c.style.display===\'none\'){c.style.display=\'\';a.textContent=\'\\u25B2\';this.setAttribute(\'aria-expanded\',\'true\')}else{c.style.display=\'none\';a.textContent=\'\\u25BC\';this.setAttribute(\'aria-expanded\',\'false\')}" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();this.click()}">\u{1F50D} Needs ID (' + needsIdObs.length + ')<span class="collapse-arrow" aria-hidden="true">\u25B2</span></div>';
                   listHtml += '<div>' + needsIdObs.map(firstObsItemHtml).join("") + '</div>';
                 }
                 listHtml += '</div>';
@@ -1033,10 +1047,10 @@
     </script>
     <footer class="site-footer">
       <div class="organized-by">City Nature Challenge is organized by</div>
-      <div class="org-logos">
+      <nav class="org-logos" aria-label="Organizer links">
         <a href="https://www.nhm.org" target="_blank"><img src="../nhm-logo.svg" alt="Natural History Museum of Los Angeles County" class="nhm"></a>
         <a href="https://www.calacademy.org" target="_blank"><img src="../cal-academy.svg" alt="California Academy of Sciences" class="cas"></a>
-      </div>
+      </nav>
       <p>Website created by <a href="https://glauberramos.github.io/inat/" target="_blank">Glauber Ramos</a></p>
     </footer>
   </body>

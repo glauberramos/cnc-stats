@@ -8,6 +8,8 @@
     darkModeToggle.id = "darkModeToggle";
     darkModeToggle.className = "dark-mode-toggle";
     darkModeToggle.title = "Toggle dark mode";
+    darkModeToggle.setAttribute("aria-label", "Toggle dark mode");
+    darkModeToggle.setAttribute("aria-pressed", "false");
     darkModeToggle.textContent = "🌙";
     document.body.insertBefore(darkModeToggle, document.body.firstChild);
   }
@@ -16,6 +18,7 @@
   if (localStorage.getItem("darkMode") === "true") {
     document.body.classList.add("dark-mode");
     darkModeToggle.textContent = "☀️";
+    darkModeToggle.setAttribute("aria-pressed", "true");
   }
 
   // Toggle dark mode
@@ -24,5 +27,6 @@
     const isDarkMode = document.body.classList.contains("dark-mode");
     localStorage.setItem("darkMode", isDarkMode);
     darkModeToggle.textContent = isDarkMode ? "☀️" : "🌙";
+    darkModeToggle.setAttribute("aria-pressed", isDarkMode.toString());
   });
 })();
