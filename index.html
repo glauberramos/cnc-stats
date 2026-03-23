@@ -13,6 +13,7 @@
     <meta property="og:description" content="Explore City Nature Challenge stats: observations, species, observers, and project rankings across the globe." />
     <meta property="og:image" content="https://glauberramos.github.io/cnc-stats/CNC_Logo_Grayscale.png" />
     <meta property="og:url" content="https://glauberramos.github.io/cnc-stats/" />
+    <link rel="canonical" href="https://glauberramos.github.io/cnc-stats/" />
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
@@ -21,6 +22,7 @@
     <meta name="twitter:image" content="https://glauberramos.github.io/cnc-stats/CNC_Logo_Grayscale.png" />
 
     <link rel="icon" href="favicon.ico" />
+    <link rel="preload" as="image" href="CNC_Logo_Grayscale.png" />
     <link rel="stylesheet" href="dark-mode.css" />
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -294,7 +296,7 @@
           <span class="search-icon">&#128269;</span>
           <input type="text" id="searchBox" class="search-box" placeholder="Search projects..." aria-label="Search projects" oninput="onSearch(this.value)" />
         </div>
-        <div id="projectList" class="project-list" role="list" aria-label="Projects list">
+        <div id="projectList" class="project-list" aria-label="Projects list">
           <div class="skeleton-item"><div class="skeleton-icon"></div><div class="skeleton-info"><div class="skeleton-bar" style="width:60%;height:14px"></div><div class="skeleton-bar" style="width:40%;height:10px"></div></div><div class="skeleton-bar" style="width:60px;height:14px"></div></div>
           <div class="skeleton-item"><div class="skeleton-icon"></div><div class="skeleton-info"><div class="skeleton-bar" style="width:70%;height:14px"></div><div class="skeleton-bar" style="width:35%;height:10px"></div></div><div class="skeleton-bar" style="width:60px;height:14px"></div></div>
           <div class="skeleton-item"><div class="skeleton-icon"></div><div class="skeleton-info"><div class="skeleton-bar" style="width:50%;height:14px"></div><div class="skeleton-bar" style="width:45%;height:10px"></div></div><div class="skeleton-bar" style="width:60px;height:14px"></div></div>
@@ -425,7 +427,7 @@
         if (loaded < totalCount) {
           if (!document.getElementById("loadMoreBtn")) {
             list.insertAdjacentHTML("afterend",
-              `<button id="loadMoreBtn" class="load-more-btn" aria-label="Load more projects" onclick="loadPage()">Load more (${totalCount - loaded} remaining)</button>`);
+              `<button id="loadMoreBtn" class="load-more-btn" onclick="loadPage()">Load more (${totalCount - loaded} remaining)</button>`);
           } else {
             document.getElementById("loadMoreBtn").textContent = `Load more (${totalCount - loaded} remaining)`;
           }
