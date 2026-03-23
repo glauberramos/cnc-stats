@@ -9,7 +9,22 @@
       var _slug = new URLSearchParams(location.search).get("project");
       plausible("pageview", { u: _slug ? location.origin + "/cnc-stats/project/" + _slug : location.href });
     </script>
-    <title>CNC Project Stats</title>
+    <title>City Nature Challenge – Project Stats</title>
+    <meta name="description" content="Detailed stats for a City Nature Challenge project: species, observations, first discoveries, and more." />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="City Nature Challenge – Project Stats" />
+    <meta property="og:description" content="Detailed stats for a City Nature Challenge project: species, observations, first discoveries, and more." />
+    <meta property="og:image" content="https://glauberramos.github.io/cnc-stats/CNC_Logo_Grayscale.png" />
+    <meta property="og:url" content="https://glauberramos.github.io/cnc-stats/project/" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="City Nature Challenge – Project Stats" />
+    <meta name="twitter:description" content="Detailed stats for a City Nature Challenge project: species, observations, first discoveries, and more." />
+    <meta name="twitter:image" content="https://glauberramos.github.io/cnc-stats/CNC_Logo_Grayscale.png" />
+
     <link rel="icon" href="../favicon.ico" />
     <link rel="stylesheet" href="../dark-mode.css" />
     <style>
