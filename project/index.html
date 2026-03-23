@@ -256,8 +256,13 @@
         background: #1a1a1a; margin-top: 60px; padding: 40px 20px; text-align: center;
         margin-left: -20px; margin-right: -20px; margin-bottom: -20px;
       }
-      .site-footer img { height: 180px; opacity: 0.9; }
-      .site-footer p { color: #666; font-size: 0.85rem; margin-top: 16px; letter-spacing: 0.3px; }
+      .site-footer .organized-by { color: #888; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+      .site-footer .org-logos { display: flex; align-items: center; justify-content: center; gap: 30px; margin-top: 18px; }
+      .site-footer .org-logos a { text-decoration: none; transition: opacity 0.2s; }
+      .site-footer .org-logos a:hover { opacity: 0.7; }
+      .site-footer .org-logos img.nhm { height: 140px; }
+      .site-footer .org-logos img.cas { height: 60px; }
+      .site-footer p { color: #666; font-size: 0.85rem; margin-top: 24px; letter-spacing: 0.3px; }
       .site-footer a { color: #6abf69; text-decoration: none; font-weight: 600; }
       .site-footer a:hover { text-decoration: underline; }
     </style>
@@ -1025,7 +1030,11 @@
       }
     </script>
     <footer class="site-footer">
-      <img src="../CNC20_OrganizedLockup_W.png" alt="City Nature Challenge" />
+      <div class="organized-by">City Nature Challenge is organized by</div>
+      <div class="org-logos">
+        <a href="https://www.nhm.org" target="_blank"><img src="../nhm-logo.svg" alt="Natural History Museum of Los Angeles County" class="nhm"></a>
+        <a href="https://www.calacademy.org" target="_blank"><img src="../cal-academy.svg" alt="California Academy of Sciences" class="cas"></a>
+      </div>
       <p>Website created by <a href="https://glauberramos.github.io/inat/" target="_blank">Glauber Ramos</a></p>
     </footer>
   </body>
