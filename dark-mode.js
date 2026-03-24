@@ -10,7 +10,7 @@
     darkModeToggle.title = "Toggle dark mode";
     darkModeToggle.setAttribute("aria-label", "Toggle dark mode");
     darkModeToggle.setAttribute("aria-pressed", "false");
-    darkModeToggle.textContent = "🌙";
+    darkModeToggle.textContent = "🌑";
     document.body.insertBefore(darkModeToggle, document.body.firstChild);
   }
 
@@ -26,7 +26,7 @@
     document.body.classList.toggle("dark-mode");
     const isDarkMode = document.body.classList.contains("dark-mode");
     localStorage.setItem("darkMode", isDarkMode);
-    darkModeToggle.textContent = isDarkMode ? "☀️" : "🌙";
+    darkModeToggle.textContent = isDarkMode ? "☀️" : "🌑";
     darkModeToggle.setAttribute("aria-pressed", isDarkMode.toString());
   });
 })();
