@@ -227,26 +227,26 @@
         .stats-bar { grid-template-columns: repeat(2, 1fr); gap: 10px; }
         .stat-card { padding: 14px 16px; }
         .stat-card .stat-value { font-size: 1.5rem; }
-      }
-      @media (max-width: 768px) {
         .project-header h1 { font-size: 1.5rem; }
         .project-icon { width: 48px; height: 48px; }
       }
-      @media (max-width: 480px) {
+      @media (max-width: 768px) {
         body { padding: 20px 12px; }
         .back-button { font-size: 0.8rem; padding: 8px 12px; top: 10px; left: 10px; }
-        .stats-bar { grid-template-columns: repeat(2, 1fr); }
         .project-header-content { flex-direction: column; gap: 10px; }
         .map-stats { grid-template-columns: 1fr 1fr; }
         .map-stat-card .map-stat-value { font-size: 1.1rem; }
-        .highlight-card { padding: 14px; }
+        .highlight-card { padding: 14px; max-width: 100vw; }
         .species-list-item { max-width: 100%; }
         .species-list-item .sli-tags { width: 100%; margin-left: 50px; margin-top: -4px; flex-shrink: 1 !important; flex-wrap: wrap; }
         .species-list-item .sli-badge { white-space: normal; }
-        .highlight-card { max-width: 100vw; }
         .scrollable-list { overflow-x: hidden; }
         .highlight-card h3 { flex-wrap: wrap; }
         .last-updated { width: 100%; margin-left: 0 !important; margin-top: 2px; }
+        .stat-card .stat-label { font-size: 0.6rem; }
+        .site-footer .org-logos img.nhm { height: 90px; }
+        .site-footer .org-logos img.cas { height: 40px; }
+        .site-footer .org-logos { gap: 20px; }
       }
 
       /* Dark mode */

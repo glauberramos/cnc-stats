@@ -67,7 +67,7 @@
       .hl-card:hover { transform: translateY(-3px); box-shadow: 0 6px 16px rgba(0,0,0,0.1); z-index: 1; }
       .hl-card .hl-value { font-size: 1.8rem; font-weight: 900; color: #2E7D32; line-height: 1.2; }
       .hl-card .hl-label { font-size: 0.7rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-top: 6px; }
-      @media (max-width: 480px) {
+      @media (max-width: 768px) {
         .highlight-stats { grid-template-columns: repeat(2, 1fr); }
         .hl-card { padding: 14px 10px; }
         .hl-card .hl-value { font-size: 1.4rem; }
@@ -88,7 +88,7 @@
       .stat-card:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
       .stat-card .stat-value { font-size: 1.5rem; font-weight: 900; color: #2E7D32; }
       .stat-card .stat-label { font-size: 0.65rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
-      @media (max-width: 480px) {
+      @media (max-width: 768px) {
         .stats-bar { grid-template-columns: repeat(2, 1fr); }
         .stat-card .stat-value { font-size: 1.2rem; }
       }
@@ -243,11 +243,18 @@
       body.dark-mode .load-more-btn { background: #2d2d2d; border-color: #4a8c50; color: #6abf69; }
       body.dark-mode .load-more-btn:hover { background: #1e2e1e; }
 
-      @media (max-width: 480px) {
+      @media (max-width: 768px) {
         .hero { padding: 36px 16px 32px; }
         .hero .header-logo { height: 80px; }
         .highlight-stats { margin-top: -20px; padding: 0 16px; }
         .hl-card { padding: 14px 10px; }
+        .container { border-radius: 0; border-left: none; border-right: none; }
+        .project-link .pl-title { font-size: 0.9rem; }
+        .project-link .pl-slug { font-size: 0.7rem; }
+        .stat-card .stat-label { font-size: 0.6rem; }
+        .site-footer .org-logos img.nhm { height: 90px; }
+        .site-footer .org-logos img.cas { height: 40px; }
+        .site-footer .org-logos { gap: 20px; }
       }
     </style>
   </head>
