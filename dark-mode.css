@@ -59,10 +59,12 @@ body.dark-mode input::placeholder {
 
 body.dark-mode button:not(.dark-mode-toggle) {
   background: #74ac00;
+  color: #fff;
 }
 
 body.dark-mode button:not(.dark-mode-toggle):hover {
   background: #5d8a00;
+  color: #fff;
 }
 
 body.dark-mode button:disabled {
