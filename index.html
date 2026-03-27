@@ -271,6 +271,7 @@
           <option value="2025">2025</option>
         </select>
       </p>
+      <p id="viewOnINat" style="margin-top:2px;margin-bottom:0;display:none"><a id="viewOnINatLink" href="#" target="_blank" style="text-decoration:none">View on iNaturalist &#8594;</a></p>
     </header>
 
     <main>
@@ -281,6 +282,7 @@
       <div class="hl-card"><div class="skeleton-bar" style="width:55%;height:24px;margin:0 auto 8px"></div><div class="skeleton-bar" style="width:75%;height:8px;margin:0 auto"></div></div>
       <div class="hl-card"><div class="skeleton-bar" style="width:45%;height:24px;margin:0 auto 8px"></div><div class="skeleton-bar" style="width:85%;height:8px;margin:0 auto"></div></div>
     </section>
+    <p id="viewOnINat" style="text-align:center;margin:0 0 16px;display:none"><a id="viewOnINatLink" href="#" target="_blank" style="text-decoration:none">View on iNaturalist &#8594;</a></p>
 
     <div class="container">
       <h2 class="section-label">Quality & Engagement</h2>
@@ -507,6 +509,9 @@
             <a class="stat-card" href="${baseUrl}&threatened=true&view=species" target="_blank"><div class="stat-value">${s.threatened_species.toLocaleString()}</div><div class="stat-label">\u26A0\uFE0F Threatened</div></a>
             <a class="stat-card" href="${baseUrl}&endemic=true&view=species" target="_blank"><div class="stat-value">${s.endemic_species.toLocaleString()}</div><div class="stat-label">\uD83C\uDFDD\uFE0F Endemic</div></a>
           `;
+
+          document.getElementById("viewOnINatLink").href = `https://www.inaturalist.org/projects/${slug}`;
+          document.getElementById("viewOnINat").style.display = "block";
         } catch (e) {
           console.error("Failed to fetch umbrella stats:", e);
         }
