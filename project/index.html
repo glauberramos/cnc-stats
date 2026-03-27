@@ -489,8 +489,8 @@
           fetchWithRetry(`${api}/observations/species_counts?project_id=${slug}&per_page=10&rank=species`).then(r => r.json()),
           fetchWithRetry(`${api}/observations/identifiers?project_id=${slug}&per_page=10`).then(r => r.json()),
           fetchWithRetry(`${api}/observations?project_id=${slug}&order_by=votes&per_page=10`).then(r => r.json()),
-          fetchAllPages(`${api}/observations/species_counts?project_id=${slug}&endemic=true&rank=species`),
-          fetchAllPages(`${api}/observations/species_counts?project_id=${slug}&threatened=true&rank=species`),
+          fetchAllPages(`${api}/observations/species_counts?project_id=${slug}&endemic=true&quality_grade=research&rank=species`),
+          fetchAllPages(`${api}/observations/species_counts?project_id=${slug}&threatened=true&quality_grade=research&rank=species`),
         ]);
         const statusOrder = { CR: 0, EN: 1, VU: 2, NT: 3, TH: 4 };
         const endangeredSpecies = (threatenedData || [])

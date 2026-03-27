@@ -473,8 +473,8 @@
             fetch(`${api}/observations?project_id=${slug}&quality_grade=research&per_page=0`).then(r => r.json()),
             fetch(`${api}/observations?project_id=${slug}&quality_grade=needs_id&per_page=0`).then(r => r.json()),
             fetch(`${api}/observations/identifiers?project_id=${slug}&per_page=0`).then(r => r.json()),
-            fetch(`${api}/observations/species_counts?project_id=${slug}&threatened=true&per_page=0`).then(r => r.json()),
-            fetch(`${api}/observations/species_counts?project_id=${slug}&endemic=true&per_page=0`).then(r => r.json()),
+            fetch(`${api}/observations/species_counts?project_id=${slug}&threatened=true&quality_grade=research&per_page=0`).then(r => r.json()),
+            fetch(`${api}/observations/species_counts?project_id=${slug}&endemic=true&quality_grade=research&per_page=0`).then(r => r.json()),
           ]);
           const s = {
             total_observations: obsData.total_results || 0,
