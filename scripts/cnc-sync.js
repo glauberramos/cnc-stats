@@ -303,7 +303,7 @@ async function incrementalSyncProject(projectSlug, completedAt) {
   console.log(`  Incremental sync since ${completedAt}`);
 
   while (true) {
-    const url = `${API_BASE}/observations?project_id=${projectSlug}&per_page=${PER_PAGE}&order_by=id&order=asc${idAbove ? `&id_above=${idAbove}` : ""}&updated_since=${encodeURIComponent(completedAt)}`;
+    const url = `${API_BASE}/observations?project_id=${projectSlug}&per_page=${PER_PAGE}&order_by=id&order=asc${idAbove ? `&id_above=${idAbove}` : ""}&updated_since=${completedAt.replace(/\.\d{3}/, "")}`;
     const data = await rateLimitedFetch(url);
     const results = data.results || [];
 
