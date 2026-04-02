@@ -303,7 +303,7 @@ async function incrementalSyncProject(projectSlug, completedAt) {
   console.log(`  Incremental sync since ${completedAt}`);
 
   while (true) {
-    const url = `${API_BASE}/observations?project_id=${projectSlug}&per_page=${PER_PAGE}&order_by=id&order=asc${idAbove ? `&id_above=${idAbove}` : ""}&updated_since=${new Date(completedAt).toISOString().replace(/\.\d{3}Z$/, "")}`;
+    const url = `${API_BASE}/observations?project_id=${projectSlug}&per_page=${PER_PAGE}&order_by=id&order=asc${idAbove ? `&id_above=${idAbove}` : ""}&updated_since=${encodeURIComponent(completedAt)}`;
     const data = await rateLimitedFetch(url);
     const results = data.results || [];
 
@@ -345,23 +345,28 @@ async function syncProject(projectSlug, index, total) {
     return 0;
   }
 
-  if (fullSync) {
-    return fullSyncProject(projectSlug);
+  try {
+    if (fullSync) {
+      return await fullSyncProject(projectSlug);
+    }
+
+    const log = await getSyncLog(projectSlug);
+
+    if (!log || log.status === "pending") {
+      return await fullSyncProject(projectSlug);
+    } else if (log.status === "in_progress") {
+      return await fullSyncProject(projectSlug, log.last_id_above || 0);
+    } else if (log.status === "done" && (updatedSinceOverride || log.completed_at)) {
+      return await incrementalSyncProject(projectSlug, updatedSinceOverride || log.completed_at);
+    } else if (log.status === "done") {
+      return await fullSyncProject(projectSlug);
+    }
+
+    return 0;
+  } catch (err) {
+    console.warn(`  Skipping ${projectSlug}: ${err.message}`);
+    return 0;
   }
-
-  const log = await getSyncLog(projectSlug);
-
-  if (!log || log.status === "pending") {
-    return fullSyncProject(projectSlug);
-  } else if (log.status === "in_progress") {
-    return fullSyncProject(projectSlug, log.last_id_above || 0);
-  } else if (log.status === "done" && (updatedSinceOverride || log.completed_at)) {
-    return incrementalSyncProject(projectSlug, updatedSinceOverride || log.completed_at);
-  } else if (log.status === "done") {
-    return fullSyncProject(projectSlug);
-  }
-
-  return 0;
 }
 
 
