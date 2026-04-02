@@ -175,6 +175,18 @@ async function fetchProjects() {
   projects.sort((a, b) => a.total_observations - b.total_observations);
 
   if (!dryRun) {
+    // Remove projects no longer in the umbrella before upserting
+    const currentSlugs = new Set(projects.map((p) => p.slug));
+    const staleSlugs = Object.keys(existingCounts).filter((s) => !currentSlugs.has(s));
+    if (staleSlugs.length > 0) {
+      const { error: delError } = await db
+        .from("cnc_projects")
+        .delete()
+        .in("slug", staleSlugs);
+      if (delError) console.warn(`Warning: failed to remove stale projects: ${delError.message}`);
+      else console.log(`Removed ${staleSlugs.length} stale projects: ${staleSlugs.join(", ")}`);
+    }
+
     // Upsert to Supabase
     const { error } = await db.from("cnc_projects").upsert(projects, {
       onConflict: "slug",
