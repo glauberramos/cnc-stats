@@ -642,13 +642,11 @@
             }
 
             if (placeIds.length > 0) {
-              // Fetch all places in parallel
-              const placeResults = await Promise.all(placeIds.map(id =>
-                fetchWithRetry(`https://api.inaturalist.org/v1/places/${id}`)
-                  .then(r => r.json())
-                  .then(d => d.results && d.results[0])
-                  .catch(() => null)
-              ));
+              // Fetch all places in a single batched call
+              const placeData = await fetchWithRetry(`https://api.inaturalist.org/v1/places/${placeIds.join(",")}`)
+                .then(r => r.json())
+                .catch(() => ({ results: [] }));
+              const placeResults = placeData.results || [];
 
               let allLats = [], allLngs = [];
               for (const place of placeResults) {
