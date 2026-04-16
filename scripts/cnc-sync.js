@@ -38,8 +38,8 @@ let lastRequestTime = 0;
 async function rateLimitedFetch(url, retries = 3) {
   const now = Date.now();
   const elapsed = now - lastRequestTime;
-  if (elapsed < 1000) {
-    await new Promise((r) => setTimeout(r, 1000 - elapsed));
+  if (elapsed < 1100) {
+    await new Promise((r) => setTimeout(r, 1100 - elapsed));
   }
   lastRequestTime = Date.now();
 
