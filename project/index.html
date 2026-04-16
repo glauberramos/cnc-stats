@@ -560,9 +560,9 @@
         if (projectData && projectData.length > 0 && projectData[0].year) {
           PROJECT_YEAR = projectData[0].year;
         }
-        if (PROJECT_YEAR !== 2026) {
+        if (PROJECT_YEAR === 2026) {
           const badge = document.getElementById("cncParticipantBadge");
-          if (badge) badge.style.display = "none";
+          if (badge) badge.style.display = "";
         }
 
         renderProjectHeader(projectInfo, slug);
@@ -1066,11 +1066,12 @@
       if (PROJECT_SLUG) {
         loadProject(PROJECT_SLUG);
       } else {
+        document.getElementById("cncParticipantBadge").style.display = "";
         showProjectList();
       }
     </script>
     <footer class="site-footer">
-      <a href="https://citynaturechallenge.org" target="_blank" id="cncParticipantBadge"><img src="../260225_CNC_2026-participant-badge_color.png" alt="City Nature Challenge 2026 Participant" class="cnc-badge"></a>
+      <a href="https://citynaturechallenge.org" target="_blank" id="cncParticipantBadge" style="display:none"><img src="../260225_CNC_2026-participant-badge_color.png" alt="City Nature Challenge 2026 Participant" class="cnc-badge"></a>
       <div class="organized-by"><a href="https://citynaturechallenge.org" target="_blank">City Nature Challenge</a> is organized by</div>
       <nav class="org-logos" aria-label="Organizer links">
         <a href="https://www.nhm.org" target="_blank"><img src="../nhm-logo.svg" alt="Natural History Museum of Los Angeles County" class="nhm"></a>
