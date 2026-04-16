@@ -454,13 +454,11 @@
       // fetchLiveHighlightData to avoid duplicate API calls.
       async function fetchLiveStats(slug) {
         const api = "https://api.inaturalist.org/v1";
-        const [speciesData, observersData, rgData] = await Promise.all([
-          fetchWithRetry(`${api}/observations/species_counts?project_id=${slug}&per_page=0`).then(r => r.json()),
+        const [observersData, rgData] = await Promise.all([
           fetchWithRetry(`${api}/observations/observers?project_id=${slug}&per_page=0`).then(r => r.json()),
           fetchWithRetry(`${api}/observations?project_id=${slug}&quality_grade=research&per_page=0`).then(r => r.json()),
         ]);
         return {
-          total_species: speciesData.total_results || 0,
           total_observers: observersData.total_results || 0,
           research_grade: rgData.total_results || 0,
         };
@@ -486,7 +484,7 @@
         }
 
         const [speciesData, identifiersData, topFavedData, endemicData, threatenedData] = await Promise.all([
-          fetchWithRetry(`${api}/observations/species_counts?project_id=${slug}&per_page=10&rank=species`).then(r => r.json()),
+          fetchWithRetry(`${api}/observations/species_counts?project_id=${slug}&per_page=10`).then(r => r.json()),
           fetchWithRetry(`${api}/observations/identifiers?project_id=${slug}&per_page=10`).then(r => r.json()),
           fetchWithRetry(`${api}/observations?project_id=${slug}&order_by=votes&per_page=10`).then(r => r.json()),
           fetchAllPages(`${api}/observations/species_counts?project_id=${slug}&endemic=true&quality_grade=research&rank=species`),
@@ -520,6 +518,7 @@
           };
         }
         return {
+          total_species: speciesData.total_results || 0,
           total_observations: topFavedData.total_results || 0,
           total_identifiers: identifiersData.total_results || 0,
           topSpecies: (speciesData.results || []).map(r => ({
@@ -566,7 +565,7 @@
 
         // Await both stats and highlights, then merge counts to avoid duplicate API calls
         let liveStats = null;
-        let liveHighlights = { total_observations: 0, total_identifiers: 0, topSpecies: [], topIdentifiers: [], topFavorited: [], endangeredSpecies: [], endemicSpecies: [] };
+        let liveHighlights = { total_species: 0, total_observations: 0, total_identifiers: 0, topSpecies: [], topIdentifiers: [], topFavorited: [], endangeredSpecies: [], endemicSpecies: [] };
         try {
           liveHighlights = await liveHighlightsPromise;
         } catch (e) {
@@ -576,6 +575,7 @@
           const partialStats = await liveStatsPromise;
           liveStats = {
             ...partialStats,
+            total_species: liveHighlights.total_species,
             total_observations: liveHighlights.total_observations,
             total_identifiers: liveHighlights.total_identifiers,
           };
