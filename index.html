@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script defer data-domain="glauberramos.github.io/cnc-stats" src="https://plausible.io/js/script.js"></script>
+    <script defer data-domain="citynaturestats.com" src="https://plausible.io/js/script.js"></script>
     <title>City Nature Challenge – Stats Dashboard</title>
     <meta name="description" content="Explore City Nature Challenge stats: observations, species, observers, and project rankings across the globe." />
 
@@ -369,7 +369,7 @@
         const speciesCount = p.computed_stats?.summary?.total_species ?? 0;
         const species = speciesCount.toLocaleString() + " species";
         return `
-          <a class="project-link" href="/cnc-stats/project/?project=${p.slug}">
+          <a class="project-link" href="/project/?project=${p.slug}">
             <img src="${icon}" alt="" />
             <div class="pl-info">
               <div class="pl-title">${title}</div>
