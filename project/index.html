@@ -448,21 +448,19 @@
       }
 
       // ─── Fetch live stats from iNat API ───
+      // Note: total_observations and total_identifiers are obtained from
+      // fetchLiveHighlightData to avoid duplicate API calls.
       async function fetchLiveStats(slug) {
         const api = "https://api.inaturalist.org/v1";
-        const [obsData, speciesData, observersData, rgData, identifiersData] = await Promise.all([
-          fetchWithRetry(`${api}/observations?project_id=${slug}&per_page=0`).then(r => r.json()),
+        const [speciesData, observersData, rgData] = await Promise.all([
           fetchWithRetry(`${api}/observations/species_counts?project_id=${slug}&per_page=0`).then(r => r.json()),
           fetchWithRetry(`${api}/observations/observers?project_id=${slug}&per_page=0`).then(r => r.json()),
           fetchWithRetry(`${api}/observations?project_id=${slug}&quality_grade=research&per_page=0`).then(r => r.json()),
-          fetchWithRetry(`${api}/observations/identifiers?project_id=${slug}&per_page=0`).then(r => r.json()),
         ]);
         return {
-          total_observations: obsData.total_results || 0,
           total_species: speciesData.total_results || 0,
           total_observers: observersData.total_results || 0,
           research_grade: rgData.total_results || 0,
-          total_identifiers: identifiersData.total_results || 0,
         };
       }
 
@@ -520,6 +518,8 @@
           };
         }
         return {
+          total_observations: topFavedData.total_results || 0,
+          total_identifiers: identifiersData.total_results || 0,
           topSpecies: (speciesData.results || []).map(r => ({
             taxon_id: r.taxon.id, name: r.taxon.preferred_common_name || r.taxon.name,
             sci: r.taxon.name, photo: r.taxon.default_photo ? r.taxon.default_photo.square_url : null,
@@ -562,20 +562,24 @@
 
         renderProjectHeader(projectInfo, slug);
 
-        // Render live stats immediately
+        // Await both stats and highlights, then merge counts to avoid duplicate API calls
         let liveStats = null;
-        try {
-          liveStats = await liveStatsPromise;
-          renderStats(liveStats);
-        } catch (e) {
-          console.warn("Live stats fetch failed:", e);
-        }
-
-        let liveHighlights = { topSpecies: [], topIdentifiers: [], topFavorited: [], endangeredSpecies: [], endemicSpecies: [] };
+        let liveHighlights = { total_observations: 0, total_identifiers: 0, topSpecies: [], topIdentifiers: [], topFavorited: [], endangeredSpecies: [], endemicSpecies: [] };
         try {
           liveHighlights = await liveHighlightsPromise;
         } catch (e) {
           console.warn("Live highlights fetch failed:", e);
+        }
+        try {
+          const partialStats = await liveStatsPromise;
+          liveStats = {
+            ...partialStats,
+            total_observations: liveHighlights.total_observations,
+            total_identifiers: liveHighlights.total_identifiers,
+          };
+          renderStats(liveStats);
+        } catch (e) {
+          console.warn("Live stats fetch failed:", e);
         }
 
         if (stats) {
