@@ -588,7 +588,7 @@
           document.getElementById("highlightsContainer").innerHTML = '<p style="text-align:center;color:#888;padding:20px">More details coming soon.</p>';
         }
 
-        renderObservationMap(slug, liveStats || stats);
+        renderObservationMap(slug, liveStats || stats, projectInfo);
       }
 
       // ─── Render stats (from live iNat API data) ───
@@ -620,16 +620,14 @@
         throw new Error(`Failed to fetch ${url}`);
       }
 
-      async function renderObservationMap(slug, stats) {
+      async function renderObservationMap(slug, stats, projectInfo) {
         const mapContainer = document.getElementById("observationMap");
         const mapSubtitle = document.getElementById("mapSubtitle");
         if (!mapContainer || !mapSubtitle) return;
 
         try {
-          // 1. Get project bounding box from iNat API
-          const projRes = await fetchWithRetry(`https://api.inaturalist.org/v1/projects/${slug}`);
-          const projData = await projRes.json();
-          const proj = projData.results && projData.results[0];
+          // 1. Get project bounding box from project info (already fetched)
+          const proj = projectInfo;
 
           let bounds = null;
           let placeIds = [];
