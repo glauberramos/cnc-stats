@@ -158,7 +158,8 @@ async function fetchProjects() {
   const existingCounts = {};
   const { data: existingProjects } = await db
     .from("cnc_projects")
-    .select("slug, total_observations");
+    .select("slug, total_observations")
+    .eq("year", CNC_YEAR);
   if (existingProjects) {
     existingProjects.forEach((p) => { existingCounts[p.slug] = p.total_observations || 0; });
   }
@@ -182,6 +183,7 @@ async function fetchProjects() {
       const { error: delError } = await db
         .from("cnc_projects")
         .delete()
+        .eq("year", CNC_YEAR)
         .in("slug", staleSlugs);
       if (delError) console.warn(`Warning: failed to remove stale projects: ${delError.message}`);
       else console.log(`Removed ${staleSlugs.length} stale projects: ${staleSlugs.join(", ")}`);
