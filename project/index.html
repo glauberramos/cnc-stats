@@ -450,17 +450,15 @@
       }
 
       // ─── Fetch live stats from iNat API ───
-      // Note: total_observations and total_identifiers are obtained from
-      // fetchLiveHighlightData to avoid duplicate API calls.
+      // Note: total_observations, total_identifiers, and total_species are
+      // obtained from fetchLiveHighlightData to avoid duplicate API calls.
       async function fetchLiveStats(slug) {
         const api = "https://api.inaturalist.org/v1";
-        const [speciesData, observersData, rgData] = await Promise.all([
-          fetchWithRetry(`${api}/observations/species_counts?project_id=${slug}&per_page=0`).then(r => r.json()),
+        const [observersData, rgData] = await Promise.all([
           fetchWithRetry(`${api}/observations/observers?project_id=${slug}&per_page=0`).then(r => r.json()),
           fetchWithRetry(`${api}/observations?project_id=${slug}&quality_grade=research&per_page=0`).then(r => r.json()),
         ]);
         return {
-          total_species: speciesData.total_results || 0,
           total_observers: observersData.total_results || 0,
           research_grade: rgData.total_results || 0,
         };
@@ -522,6 +520,7 @@
         return {
           total_observations: topFavedData.total_results || 0,
           total_identifiers: identifiersData.total_results || 0,
+          total_species: speciesData.total_results || 0,
           topSpecies: (speciesData.results || []).map(r => ({
             taxon_id: r.taxon.id, name: r.taxon.preferred_common_name || r.taxon.name,
             sci: r.taxon.name, photo: r.taxon.default_photo ? r.taxon.default_photo.square_url : null,
@@ -578,6 +577,7 @@
             ...partialStats,
             total_observations: liveHighlights.total_observations,
             total_identifiers: liveHighlights.total_identifiers,
+            total_species: liveHighlights.total_species,
           };
           renderStats(liveStats);
         } catch (e) {
