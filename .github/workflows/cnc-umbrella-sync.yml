@@ -1,0 +1,33 @@
+name: CNC Umbrella Stats Sync
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install dotenv @supabase/supabase-js
+
+      - name: Sync 2025 umbrella stats
+        run: node scripts/cnc-umbrella-sync.js
+        env:
+          CNC_YEAR: 2025
+
+      - name: Sync 2026 umbrella stats
+        run: node scripts/cnc-umbrella-sync.js
+        env:
+          CNC_YEAR: 2026

@@ -464,33 +464,29 @@
 
       loadPage();
 
-      // Fetch umbrella project stats from iNat API
+      // Fetch umbrella project stats from Supabase (populated hourly by sync script)
       async function fetchUmbrellaStats() {
         const slug = YEAR_CONFIG[selectedYear].umbrella;
-        const api = "https://api.inaturalist.org/v1";
         const baseUrl = `https://www.inaturalist.org/observations?project_id=${slug}&verifiable=any`;
         try {
-          const [obsData, speciesData, observersData, rgData, needsIdData, identifiersData, threatenedData, endemicData] = await Promise.all([
-            fetch(`${api}/observations?project_id=${slug}&per_page=0`).then(r => r.json()),
-            fetch(`${api}/observations/species_counts?project_id=${slug}&per_page=0`).then(r => r.json()),
-            fetch(`${api}/observations/observers?project_id=${slug}&per_page=0`).then(r => r.json()),
-            fetch(`${api}/observations?project_id=${slug}&quality_grade=research&per_page=0`).then(r => r.json()),
-            fetch(`${api}/observations?project_id=${slug}&quality_grade=needs_id&per_page=0`).then(r => r.json()),
-            fetch(`${api}/observations/identifiers?project_id=${slug}&per_page=0`).then(r => r.json()),
-            fetch(`${api}/observations/species_counts?project_id=${slug}&threatened=true&quality_grade=research&per_page=0`).then(r => r.json()),
-            fetch(`${api}/observations/species_counts?project_id=${slug}&endemic=true&quality_grade=research&per_page=0`).then(r => r.json()),
+          const [{ data: statsRow }, { count: projectCount }] = await Promise.all([
+            db.from("cnc_umbrella_stats").select("*").eq("year", selectedYear).maybeSingle(),
+            db.from("cnc_projects").select("*", { count: "exact", head: true }).eq("year", selectedYear),
           ]);
+          if (!statsRow) {
+            console.warn(`No umbrella stats cached for year ${selectedYear}`);
+            return;
+          }
           const s = {
-            total_observations: obsData.total_results || 0,
-            total_species: speciesData.total_results || 0,
-            total_observers: observersData.total_results || 0,
-            research_grade: rgData.total_results || 0,
-            needs_id: needsIdData.total_results || 0,
-            total_identifiers: identifiersData.total_results || 0,
-            threatened_species: threatenedData.total_results || 0,
-            endemic_species: endemicData.total_results || 0,
+            total_observations: statsRow.total_observations || 0,
+            total_species: statsRow.total_species || 0,
+            total_observers: statsRow.total_observers || 0,
+            research_grade: statsRow.research_grade || 0,
+            needs_id: statsRow.needs_id || 0,
+            total_identifiers: statsRow.total_identifiers || 0,
+            threatened_species: statsRow.threatened_species || 0,
+            endemic_species: statsRow.endemic_species || 0,
           };
-          const { count: projectCount } = await db.from("cnc_projects").select("*", { count: "exact", head: true }).eq("year", selectedYear);
 
           // Hero highlight stats
           document.getElementById("highlightStats").innerHTML = `

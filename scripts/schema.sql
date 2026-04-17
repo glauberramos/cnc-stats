@@ -79,6 +79,20 @@ create table cnc_project_species (
 
 create index idx_cnc_project_species_slug on cnc_project_species(project_slug);
 
+-- Umbrella stats cache (one row per year, populated by sync)
+create table cnc_umbrella_stats (
+  year int primary key,
+  total_observations int default 0,
+  total_species int default 0,
+  total_observers int default 0,
+  research_grade int default 0,
+  needs_id int default 0,
+  total_identifiers int default 0,
+  threatened_species int default 0,
+  endemic_species int default 0,
+  synced_at timestamptz
+);
+
 -- Migration: add columns to cnc_projects
 -- alter table cnc_projects add column place_ids jsonb;
 -- alter table cnc_projects add column identification_stats jsonb;
