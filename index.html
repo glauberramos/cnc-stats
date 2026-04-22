@@ -357,7 +357,11 @@
       }
 
       const PAGE_SIZE = 100;
-      let allProjects = null;
+      let allProjectsPromise = null;
+      function getAllProjects() {
+        if (!allProjectsPromise) allProjectsPromise = fetchAllProjects();
+        return allProjectsPromise;
+      }
       let loaded = 0;
       let totalCount = 0;
       let searchQuery = "";
@@ -402,9 +406,7 @@
         const btn = document.getElementById("loadMoreBtn");
         if (btn) btn.innerHTML = '<span class="spinner-sm"></span> Loading...';
 
-        if (!allProjects) {
-          allProjects = await fetchAllProjects();
-        }
+        const allProjects = await getAllProjects();
 
         let filtered = allProjects;
         if (searchQuery) {
@@ -518,9 +520,7 @@
 
       // Aggregate first observations (research grade, global firsts) across all projects
       async function renderGlobalFirstObs() {
-        if (!allProjects) {
-          allProjects = await fetchAllProjects();
-        }
+        const allProjects = await getAllProjects();
         const globalFirsts = [];
         const seen = new Set();
         for (const p of allProjects) {
