@@ -10,7 +10,7 @@ const API_BASE = "https://api.inaturalist.org/v1";
 const PER_PAGE = 200;
 const PROJECT_BATCH_SIZE = 10;
 const TAXA_BATCH_SIZE = 30;
-const BATCH_LIMIT = 20;
+const BATCH_LIMIT = CNC_YEAR === 2026 ? 40 : 10;
 const SPECIES_OR_BELOW = new Set(["species", "subspecies", "variety", "form", "hybrid", "infraspecies"]);
 
 // CLI args
