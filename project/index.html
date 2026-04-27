@@ -165,7 +165,7 @@
       .group-header-rg { color: #2E7D32; background: #e8f5e9; }
       .group-header-needs-id { color: #e65100; background: #fff3e0; }
       .group-header-mt { margin-top: 12px; }
-      .scrollable-list { max-height: 560px; overflow-y: auto; }
+      .scrollable-list { max-height: 860px; overflow-y: auto; padding-right: 4px; }
       .scrollable-list::-webkit-scrollbar { width: 6px; }
       .scrollable-list::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
       .scrollable-list::-webkit-scrollbar-thumb:hover { background: #aaa; }
@@ -188,6 +188,64 @@
       .species-list-item .sli-badge {
         font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 10px;
         background: #e8f5e9; color: #2E7D32; flex-shrink: 0; white-space: nowrap;
+      }
+
+      /* Species / Observations grid */
+      .species-grid {
+        display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+      }
+      @media (max-width: 900px) { .species-grid { grid-template-columns: repeat(2, 1fr); } }
+      @media (max-width: 480px) { .species-grid { grid-template-columns: 1fr; gap: 10px; } }
+      .species-grid-item {
+        display: flex; flex-direction: column;
+        background: #fafafa; border: 1px solid #e0e0e0; border-radius: 12px;
+        overflow: hidden; text-decoration: none; color: inherit;
+        transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+      }
+      .species-grid-item:hover {
+        border-color: #2E7D32; box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        transform: translateY(-2px);
+      }
+      .sgi-photo {
+        position: relative; width: 100%; aspect-ratio: 1;
+        background: #e8e8e8; overflow: hidden;
+      }
+      .sgi-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .sgi-photo.round img { border-radius: 50%; }
+      .sgi-info {
+        padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 2px;
+        min-width: 0;
+      }
+      .sgi-name {
+        font-size: 0.9rem; font-weight: 700; color: #1a1a1a; line-height: 1.3;
+        overflow: hidden; text-overflow: ellipsis; display: -webkit-box;
+        -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      }
+      .sgi-sci {
+        font-size: 0.75rem; font-style: italic; color: #888;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      }
+      .sgi-meta { font-size: 0.75rem; color: #888; }
+      .sgi-badge {
+        display: inline-block; font-size: 0.7rem; font-weight: 700;
+        padding: 3px 9px; border-radius: 10px;
+        background: #e8f5e9; color: #2E7D32; margin-top: 6px;
+        align-self: flex-start; white-space: nowrap;
+      }
+      .sgi-overlay-badges {
+        position: absolute; top: 6px; left: 6px; right: 6px;
+        display: flex; gap: 4px; flex-wrap: wrap; justify-content: space-between;
+        align-items: flex-start; pointer-events: none;
+      }
+      .sgi-overlay {
+        font-size: 0.7rem; font-weight: 700; padding: 3px 8px; border-radius: 10px;
+        white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+      }
+      .sgi-overlay.gold { background: linear-gradient(135deg,#FFD700,#FFA000); color: #333; }
+      .sgi-overlay.green { background: linear-gradient(135deg,#4CAF50,#2E7D32); color: #fff; }
+      .sgi-overlay-status {
+        font-size: 0.75rem; font-weight: 700; padding: 3px 9px; border-radius: 10px;
+        color: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.35); white-space: nowrap;
       }
 
       /* Loading */
@@ -276,6 +334,11 @@
       body.dark-mode .species-list-item:hover { background: #3d3d3d; }
       body.dark-mode .species-list-item .sli-name { color: #e0e0e0; }
       body.dark-mode .species-list-item .sli-badge { background: rgba(46,125,50,0.3); color: #6abf69; }
+      body.dark-mode .species-grid-item { background: #252525; border-color: #3a3a3a; }
+      body.dark-mode .species-grid-item:hover { background: #2d2d2d; border-color: #6abf69; box-shadow: 0 4px 12px rgba(0,0,0,0.35); }
+      body.dark-mode .sgi-photo { background: #1a1a1a; }
+      body.dark-mode .sgi-name { color: #e0e0e0; }
+      body.dark-mode .sgi-badge { background: rgba(46,125,50,0.3); color: #6abf69; }
       body.dark-mode .scrollable-list::-webkit-scrollbar-thumb { background: #555; }
       body.dark-mode .scrollable-list::-webkit-scrollbar-thumb:hover { background: #777; }
       body.dark-mode .highlight-empty { color: #777; }
@@ -883,16 +946,16 @@
         function speciesItemHtml(s, badge) {
           const name = s.common_name || s.taxon_name || "Unknown";
           const sci = s.taxon_name || "";
-          const photo = s.photo_url || "";
+          const photo = s.photo_url ? s.photo_url.replace("square", "medium").replace("small", "medium") : "";
           const taxonUrl = s.taxon_id ? `https://www.inaturalist.org/observations?project_id=${PROJECT_SLUG}&taxon_id=${s.taxon_id}&verifiable=any` : "#";
           return `
-            <a class="species-list-item" href="${taxonUrl}" target="_blank">
-              ${photo ? `<img src="${photo}" alt="" />` : `<span style="width:40px;height:40px;border-radius:8px;background:#e8e8e8;display:inline-block;flex-shrink:0"></span>`}
-              <div class="sli-info">
-                <div class="sli-name">${name}</div>
-                ${sci && sci !== name ? `<div class="sli-sci">${sci}</div>` : ""}
+            <a class="species-grid-item" href="${taxonUrl}" target="_blank">
+              <div class="sgi-photo">${photo ? `<img src="${photo}" alt="${name}" loading="lazy" />` : ""}</div>
+              <div class="sgi-info">
+                <div class="sgi-name">${name}</div>
+                ${sci && sci !== name ? `<div class="sgi-sci">${sci}</div>` : ""}
+                ${badge ? `<span class="sgi-badge">${badge}</span>` : ""}
               </div>
-              ${badge ? `<span class="sli-badge">${badge}</span>` : ""}
             </a>`;
         }
 
@@ -914,16 +977,16 @@
 
         function obsItemHtml(o, badge) {
           const name = o.common_name || o.taxon_name || "Unknown";
-          const photo = o.photo_url || "";
+          const photo = o.photo_url ? o.photo_url.replace("square", "medium").replace("small", "medium") : "";
           const url = `https://www.inaturalist.org/observations/${o.inat_id}`;
           return `
-            <a class="species-list-item" href="${url}" target="_blank">
-              ${photo ? `<img src="${photo}" alt="" />` : `<span style="width:40px;height:40px;border-radius:8px;background:#e8e8e8;display:inline-block;flex-shrink:0"></span>`}
-              <div class="sli-info">
-                <div class="sli-name">${name}</div>
-                <div class="sli-meta">by ${o.user_login || "?"}</div>
+            <a class="species-grid-item" href="${url}" target="_blank">
+              <div class="sgi-photo">${photo ? `<img src="${photo}" alt="${name}" loading="lazy" />` : ""}</div>
+              <div class="sgi-info">
+                <div class="sgi-name">${name}</div>
+                <div class="sgi-meta">by ${o.user_login || "?"}</div>
+                <span class="sgi-badge">${badge}</span>
               </div>
-              <span class="sli-badge">${badge}</span>
             </a>`;
         }
 
@@ -945,28 +1008,31 @@
                 function firstObsItemHtml(s) {
                   const name = s.common_name || s.taxon_name || "Unknown";
                   const sci = s.taxon_name || "";
-                  const photo = s.photo_url || "";
+                  const photo = s.photo_url ? s.photo_url.replace("square", "medium").replace("small", "medium") : "";
                   const taxonUrl = s.taxon_id ? "https://www.inaturalist.org/observations?project_id=" + PROJECT_SLUG + "&taxon_id=" + s.taxon_id + "&verifiable=any" : "#";
-                  return '<a class="species-list-item" href="' + taxonUrl + '" target="_blank">'
-                    + (photo ? '<img src="' + photo + '" alt="" />' : '<span style="width:40px;height:40px;border-radius:8px;background:#e8e8e8;display:inline-block;flex-shrink:0"></span>')
-                    + '<div class="sli-info">'
-                    + '<div class="sli-name">' + name + '</div>'
-                    + (sci && sci !== name ? '<div class="sli-sci">' + sci + '</div>' : '')
+                  const overlays = [];
+                  if (s.first_global_obs) overlays.push('<span class="sgi-overlay gold">⭐ 1st global</span>');
+                  if (s.first_local_obs) overlays.push('<span class="sgi-overlay green">\u{1F4CD} 1st local</span>');
+                  const overlayHtml = overlays.length > 0 ? '<div class="sgi-overlay-badges">' + overlays.join("") + '</div>' : '';
+                  return '<a class="species-grid-item" href="' + taxonUrl + '" target="_blank">'
+                    + '<div class="sgi-photo">'
+                    + (photo ? '<img src="' + photo + '" alt="' + name + '" loading="lazy" />' : '')
+                    + overlayHtml
                     + '</div>'
-                    + '<div class="sli-tags" style="display:flex;align-items:center;gap:6px;flex-shrink:0">'
-                    + (s.first_global_obs ? '<span style="background:linear-gradient(135deg,#FFD700,#FFA000);color:#333;font-size:0.7rem;font-weight:700;padding:3px 8px;border-radius:10px;white-space:nowrap;box-shadow:0 1px 3px rgba(255,160,0,0.3)">\u2B50 1st global</span>' : '')
-                    + (s.first_local_obs ? '<span style="background:linear-gradient(135deg,#4CAF50,#2E7D32);color:#fff;font-size:0.7rem;font-weight:700;padding:3px 8px;border-radius:10px;white-space:nowrap;box-shadow:0 1px 3px rgba(46,125,50,0.3)">\u{1F4CD} 1st local</span>' : '')
-                    + '<span class="sli-badge">' + (s.global_obs_count || 0) + ' global' + (s.local_obs_count != null ? ' \u00B7 ' + s.local_obs_count + ' local' : '') + '</span>'
+                    + '<div class="sgi-info">'
+                    + '<div class="sgi-name">' + name + '</div>'
+                    + (sci && sci !== name ? '<div class="sgi-sci">' + sci + '</div>' : '')
+                    + '<span class="sgi-badge">' + (s.global_obs_count || 0) + ' global' + (s.local_obs_count != null ? ' \u00B7 ' + s.local_obs_count + ' local' : '') + '</span>'
                     + '</div></a>';
                 }
                 let listHtml = '<div class="scrollable-list">';
                 if (rgObs.length > 0) {
                   listHtml += '<div class="group-header group-header-rg" role="button" tabindex="0" aria-expanded="true" aria-label="Research Grade observations" onclick="const c=this.nextElementSibling;const a=this.querySelector(\'.collapse-arrow\');if(c.style.display===\'none\'){c.style.display=\'\';a.textContent=\'\\u25B2\';this.setAttribute(\'aria-expanded\',\'true\')}else{c.style.display=\'none\';a.textContent=\'\\u25BC\';this.setAttribute(\'aria-expanded\',\'false\')}" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();this.click()}">\u2705 Research Grade (' + rgObs.length + ')<span class="collapse-arrow" aria-hidden="true">\u25B2</span></div>';
-                  listHtml += '<div>' + rgObs.map(firstObsItemHtml).join("") + '</div>';
+                  listHtml += '<div class="species-grid">' + rgObs.map(firstObsItemHtml).join("") + '</div>';
                 }
                 if (needsIdObs.length > 0) {
                   listHtml += '<div class="group-header group-header-needs-id' + (rgObs.length > 0 ? ' group-header-mt' : '') + '" role="button" tabindex="0" aria-expanded="true" aria-label="Needs ID observations" onclick="const c=this.nextElementSibling;const a=this.querySelector(\'.collapse-arrow\');if(c.style.display===\'none\'){c.style.display=\'\';a.textContent=\'\\u25B2\';this.setAttribute(\'aria-expanded\',\'true\')}else{c.style.display=\'none\';a.textContent=\'\\u25BC\';this.setAttribute(\'aria-expanded\',\'false\')}" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();this.click()}">\u{1F50D} Needs ID (' + needsIdObs.length + ')<span class="collapse-arrow" aria-hidden="true">\u25B2</span></div>';
-                  listHtml += '<div>' + needsIdObs.map(firstObsItemHtml).join("") + '</div>';
+                  listHtml += '<div class="species-grid">' + needsIdObs.map(firstObsItemHtml).join("") + '</div>';
                 }
                 listHtml += '</div>';
                 return listHtml;
@@ -978,18 +1044,18 @@
         function endangeredItemHtml(s) {
           const name = s.common_name || s.taxon_name || "Unknown";
           const sci = s.taxon_name || "";
-          const photo = s.photo_url || "";
+          const photo = s.photo_url ? s.photo_url.replace("square", "medium").replace("small", "medium") : "";
           const color = iucnColors[s.status] || "#666";
           const taxonUrl = s.taxon_id ? "https://www.inaturalist.org/observations?project_id=" + PROJECT_SLUG + "&taxon_id=" + s.taxon_id + "&verifiable=any" : "#";
-          return '<a class="species-list-item" href="' + taxonUrl + '" target="_blank">'
-            + (photo ? '<img src="' + photo + '" alt="" />' : '<span style="width:40px;height:40px;border-radius:8px;background:#e8e8e8;display:inline-block;flex-shrink:0"></span>')
-            + '<div class="sli-info">'
-            + '<div class="sli-name">' + name + '</div>'
-            + (sci && sci !== name ? '<div class="sli-sci">' + sci + '</div>' : '')
+          return '<a class="species-grid-item" href="' + taxonUrl + '" target="_blank">'
+            + '<div class="sgi-photo">'
+            + (photo ? '<img src="' + photo + '" alt="' + name + '" loading="lazy" />' : '')
+            + '<div class="sgi-overlay-badges"><span class="sgi-overlay-status" style="background:' + color + '">' + s.status + '</span></div>'
             + '</div>'
-            + '<div class="sli-tags" style="display:flex;align-items:center;gap:6px;flex-shrink:0">'
-            + '<span style="background:' + color + ';color:#fff;font-size:0.7rem;font-weight:700;padding:3px 8px;border-radius:10px;white-space:nowrap">' + s.status + '</span>'
-            + '<span class="sli-badge">' + s.project_obs_count + ' obs</span>'
+            + '<div class="sgi-info">'
+            + '<div class="sgi-name">' + name + '</div>'
+            + (sci && sci !== name ? '<div class="sgi-sci">' + sci + '</div>' : '')
+            + '<span class="sgi-badge">' + s.project_obs_count + ' obs</span>'
             + '</div></a>';
         }
 
@@ -998,13 +1064,13 @@
         html += `<div class="highlight-card">
           <h3>\u{1F30D} Threatened Species <span class="highlight-count">${endangered.total} species</span></h3>
           ${endangered.species && endangered.species.length > 0
-            ? `<div class="scrollable-list">${endangered.species.map(s => endangeredItemHtml(s)).join("")}</div>`
+            ? `<div class="scrollable-list"><div class="species-grid">${endangered.species.map(s => endangeredItemHtml(s)).join("")}</div></div>`
             : `<div class="highlight-empty">No endangered species found</div>`}
         </div>`;
         html += `<div class="highlight-card">
           <h3>\u{1F3DD}\uFE0F Endemic Species <span class="highlight-count">${endemicSpecies.length} species</span></h3>
           ${endemicSpecies.length > 0
-            ? `<div class="scrollable-list">${endemicSpecies.map(s => speciesItemHtml(s, s.obs_count ? s.obs_count + ' obs' : '')).join("")}</div>`
+            ? `<div class="scrollable-list"><div class="species-grid">${endemicSpecies.map(s => speciesItemHtml(s, s.obs_count ? s.obs_count + ' obs' : '')).join("")}</div></div>`
             : `<div class="highlight-empty">No endemic species data available</div>`}
         </div>`;
         html += `</div>`;
@@ -1014,16 +1080,18 @@
         html += `<div class="highlight-card">
           <h3>\u{1F3C5} Most Observed Species <span class="highlight-count">Top 10</span></h3>
           ${topSpecies.length > 0
-            ? topSpecies.map((s, i) => {
+            ? `<div class="species-grid">` + topSpecies.map((s, i) => {
                 const taxonUrl = s.taxon_id ? `https://www.inaturalist.org/observations?project_id=${PROJECT_SLUG}&taxon_id=${s.taxon_id}&verifiable=any` : "#";
-                return `<a class="species-list-item" href="${taxonUrl}" target="_blank">
-                  ${s.photo ? `<img src="${s.photo}" alt="" />` : `<span style="width:40px;height:40px;border-radius:8px;background:#e8e8e8;display:inline-block;flex-shrink:0"></span>`}
-                  <div class="sli-info">
-                    <div class="sli-name">${s.name}${s.sci && s.sci !== s.name ? ` <span style="font-style:italic;font-weight:400;color:#888">${s.sci}</span>` : ""}</div>
+                const photo = s.photo ? s.photo.replace("square", "medium").replace("small", "medium") : "";
+                return `<a class="species-grid-item" href="${taxonUrl}" target="_blank">
+                  <div class="sgi-photo">${photo ? `<img src="${photo}" alt="${s.name}" loading="lazy" />` : ""}</div>
+                  <div class="sgi-info">
+                    <div class="sgi-name">${s.name}</div>
+                    ${s.sci && s.sci !== s.name ? `<div class="sgi-sci">${s.sci}</div>` : ""}
+                    <span class="sgi-badge">${s.count} obs</span>
                   </div>
-                  <span class="sli-badge">${s.count} obs</span>
                 </a>`;
-              }).join("")
+              }).join("") + `</div>`
             : `<div class="highlight-empty">No data available</div>`}
         </div>`;
         html += `<div class="highlight-card">
@@ -1048,13 +1116,13 @@
         html += `<div class="highlight-card">
           <h3>\u2764\uFE0F Most Favorited <span class="highlight-count">Top 10</span></h3>
           ${topFavorited.length > 0
-            ? topFavorited.map(o => obsItemHtml(o, `\u2764\uFE0F ${o.faves_count || 0}`)).join("")
+            ? `<div class="species-grid">${topFavorited.map(o => obsItemHtml(o, `\u2764\uFE0F ${o.faves_count || 0}`)).join("")}</div>`
             : `<div class="highlight-empty">No favorited observations</div>`}
         </div>`;
         html += `<div class="highlight-card">
           <h3>\u{1F4AC} Most Commented <span class="highlight-count">Top 10</span>${lastUpdated}</h3>
           ${topCommented.length > 0
-            ? topCommented.map(o => obsItemHtml(o, `\u{1F4AC} ${o.comments_count || 0}`)).join("")
+            ? `<div class="species-grid">${topCommented.map(o => obsItemHtml(o, `\u{1F4AC} ${o.comments_count || 0}`)).join("")}</div>`
             : `<div class="highlight-empty">No commented observations</div>`}
         </div>`;
         html += `</div>`;
