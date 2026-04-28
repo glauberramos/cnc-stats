@@ -583,7 +583,8 @@
               const name = s.common_name || s.taxon_name || "Unknown";
               const sci = s.taxon_name || "";
               const photo = s.photo_url ? s.photo_url.replace("square", "medium").replace("small", "medium") : "";
-              const projectTitle = s.project_title || s.project_slug;
+              const rawTitle = s.project_title || s.project_slug;
+              const projectTitle = rawTitle.replace(/^City Nature Challenge\s*\d{4}\s*[:\-–—]\s*/i, "");
               const taxonUrl = s.taxon_id ? "https://www.inaturalist.org/observations?project_id=" + s.project_slug + "&taxon_id=" + s.taxon_id + "&verifiable=any" : "#";
               return '<a class="species-grid-item" href="' + taxonUrl + '" target="_blank">'
                 + '<div class="sgi-photo">'
@@ -594,7 +595,6 @@
                 + '<div class="sgi-name">' + name + '</div>'
                 + (sci && sci !== name ? '<div class="sgi-sci">' + sci + '</div>' : '')
                 + '<div class="sgi-project">' + projectTitle + '</div>'
-                + '<span class="sgi-badge">' + (s.global_obs_count || 0) + ' global obs</span>'
                 + '</div></a>';
             }).join("")}
             </div>
