@@ -542,8 +542,8 @@
             <a class="stat-card" href="${baseUrl}&view=identifiers" target="_blank"><div class="stat-value">${s.total_identifiers.toLocaleString()}</div><div class="stat-label">\uD83D\uDD0E Identifiers</div></a>
             <div class="stat-card"><div class="stat-value">${s.total_species > 0 ? (s.total_observations / s.total_species).toFixed(1) : 0}</div><div class="stat-label">\uD83E\uDDEC Obs/Species</div></div>
             <div class="stat-card"><div class="stat-value">${s.total_observers > 0 ? (s.total_observations / s.total_observers).toFixed(1) : 0}</div><div class="stat-label">\uD83D\uDCCA Obs/Person</div></div>
-            <a class="stat-card" href="${baseUrl}&threatened=true&view=species" target="_blank"><div class="stat-value">${s.threatened_species.toLocaleString()}</div><div class="stat-label">\u26A0\uFE0F Threatened</div></a>
-            <a class="stat-card" href="${baseUrl}&endemic=true&view=species" target="_blank"><div class="stat-value">${s.endemic_species.toLocaleString()}</div><div class="stat-label">\uD83C\uDFDD\uFE0F Endemic</div></a>
+            <a class="stat-card" href="${baseUrl}&threatened=true&quality_grade=research&view=species" target="_blank"><div class="stat-value">${s.threatened_species.toLocaleString()}</div><div class="stat-label">\u26A0\uFE0F Threatened</div></a>
+            <a class="stat-card" href="${baseUrl}&endemic=true&quality_grade=research&view=species" target="_blank"><div class="stat-value">${s.endemic_species.toLocaleString()}</div><div class="stat-label">\uD83C\uDFDD\uFE0F Endemic</div></a>
           `;
 
           document.getElementById("viewOnINatLink").href = `https://www.inaturalist.org/projects/${slug}`;
