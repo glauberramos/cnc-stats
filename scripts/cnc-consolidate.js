@@ -18,6 +18,48 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
 
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+const API_BASE = "https://api.inaturalist.org/v1";
+
+// ─── Rate limiter (same pattern as cnc-sync.js) ───
+let lastRequestTime = 0;
+
+async function rateLimitedFetch(url, retries = 3) {
+  const now = Date.now();
+  const elapsed = now - lastRequestTime;
+  if (elapsed < 1100) {
+    await new Promise((r) => setTimeout(r, 1100 - elapsed));
+  }
+  lastRequestTime = Date.now();
+
+  let response;
+  try {
+    response = await fetch(url, {
+      headers: { "User-Agent": "CNC-Sync-Script/1.0" },
+    });
+  } catch (err) {
+    if (retries > 0) {
+      console.warn(`  Network error: ${err.message}. Retrying in 10s... (${retries} left)`);
+      await new Promise((r) => setTimeout(r, 10000));
+      lastRequestTime = Date.now();
+      return rateLimitedFetch(url, retries - 1);
+    }
+    throw err;
+  }
+
+  if (response.status === 429) {
+    console.warn("  Rate limited (429). Waiting 60s...");
+    await new Promise((r) => setTimeout(r, 60000));
+    lastRequestTime = Date.now();
+    return rateLimitedFetch(url, retries);
+  }
+
+  if (!response.ok) {
+    throw new Error(`API error ${response.status}: ${url}`);
+  }
+
+  return response.json();
+}
+
 // ─── Leaf species algorithm ───
 function computeLeafSpecies(obs) {
   const allMinSpecies = new Set();
@@ -165,6 +207,20 @@ async function consolidateProject(slug, index, total) {
 
   console.log(`${prefix}: computing stats for ${allObs.length} obs...`);
   const stats = computeStats(allObs);
+
+  // --- Authoritative species count from iNat (matches iNat's project page) ---
+  // iNat's species_counts default applies verifiable=true and captive=false,
+  // which the local leaf-species algorithm does not — so we trust iNat here.
+  try {
+    const data = await rateLimitedFetch(
+      `${API_BASE}/observations/species_counts?project_id=${slug}&per_page=0`
+    );
+    if (typeof data.total_results === "number") {
+      stats.summary.total_species = data.total_results;
+    }
+  } catch (err) {
+    console.warn(`${prefix}: species_counts fetch failed (${err.message}); keeping local count`);
+  }
 
   // --- Load taxa data from cnc_taxa ---
   const leafSpecies = computeLeafSpecies(allObs);
