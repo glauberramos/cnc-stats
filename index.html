@@ -63,10 +63,13 @@
         background: white; padding: 20px 16px; text-align: center;
         border: 1px solid #e0e0e0; border-radius: 14px; text-decoration: none; color: inherit;
         transition: transform 0.2s, box-shadow 0.2s;
+        position: relative;
       }
       .hl-card:hover { transform: translateY(-3px); box-shadow: 0 6px 16px rgba(0,0,0,0.1); z-index: 1; }
       .hl-card .hl-value { font-size: 1.8rem; font-weight: 900; color: #2E7D32; line-height: 1.2; }
       .hl-card .hl-label { font-size: 0.7rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-top: 6px; }
+      .hl-label-pct { color: #2E7D32; margin-left: 4px; }
+      body.dark-mode .hl-label-pct { color: #6abf69; }
       @media (max-width: 768px) {
         .highlight-stats { grid-template-columns: repeat(2, 1fr); }
         .hl-card { padding: 14px 10px; }
@@ -502,14 +505,34 @@
 
       loadPage();
 
+      // Get total species count on iNaturalist, cached in localStorage for 24h
+      async function getInatTotalSpecies() {
+        const KEY = "inatTotalSpecies";
+        const TTL = 24 * 60 * 60 * 1000;
+        try {
+          const cached = JSON.parse(localStorage.getItem(KEY) || "null");
+          if (cached && cached.value && Date.now() - cached.ts < TTL) return cached.value;
+        } catch (e) {}
+        try {
+          const res = await fetch("https://api.inaturalist.org/v1/observations/species_counts?verifiable=any&per_page=0");
+          const json = await res.json();
+          const value = json.total_results || 0;
+          if (value > 0) localStorage.setItem(KEY, JSON.stringify({ value, ts: Date.now() }));
+          return value;
+        } catch (e) {
+          return 0;
+        }
+      }
+
       // Fetch umbrella project stats from Supabase (populated hourly by sync script)
       async function fetchUmbrellaStats() {
         const slug = YEAR_CONFIG[selectedYear].umbrella;
         const baseUrl = `https://www.inaturalist.org/observations?project_id=${slug}&verifiable=any`;
         try {
-          const [{ data: statsRow }, { count: projectCount }] = await Promise.all([
+          const [{ data: statsRow }, { count: projectCount }, inatTotalSpecies] = await Promise.all([
             db.from("cnc_umbrella_stats").select("*").eq("year", selectedYear).maybeSingle(),
             db.from("cnc_projects").select("*", { count: "exact", head: true }).eq("year", selectedYear),
+            getInatTotalSpecies(),
           ]);
           if (!statsRow) {
             console.warn(`No umbrella stats cached for year ${selectedYear}`);
@@ -527,9 +550,15 @@
           };
 
           // Hero highlight stats
+          const pct = inatTotalSpecies > 0 && s.total_species > 0
+            ? (s.total_species / inatTotalSpecies * 100)
+            : 0;
+          const pctSuffix = pct > 0
+            ? ` <span class="hl-label-pct" title="${s.total_species.toLocaleString()} of ${inatTotalSpecies.toLocaleString()} species on iNaturalist">\u00B7 ${pct >= 1 ? pct.toFixed(1) : pct.toFixed(2)}% iNat</span>`
+            : "";
           document.getElementById("highlightStats").innerHTML = `
             <a class="hl-card" href="${baseUrl}" target="_blank"><div class="hl-value">${s.total_observations.toLocaleString()}</div><div class="hl-label">\uD83D\uDCF7 Observations</div></a>
-            <a class="hl-card" href="${baseUrl}&view=species" target="_blank"><div class="hl-value">${s.total_species.toLocaleString()}</div><div class="hl-label">\uD83C\uDF3F Species</div></a>
+            <a class="hl-card" href="${baseUrl}&view=species" target="_blank"><div class="hl-value">${s.total_species.toLocaleString()}</div><div class="hl-label">\uD83C\uDF3F Species${pctSuffix}</div></a>
             <a class="hl-card" href="${baseUrl}&view=observers" target="_blank"><div class="hl-value">${s.total_observers.toLocaleString()}</div><div class="hl-label">\uD83D\uDC65 Observers</div></a>
             <div class="hl-card"><div class="hl-value">${(projectCount || 0).toLocaleString()}</div><div class="hl-label">\uD83C\uDFD9\uFE0F Projects</div></div>
           `;
